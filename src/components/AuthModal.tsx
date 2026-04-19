@@ -23,10 +23,42 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  const validatePassword = (pass: string) => {
+    // 1. Minimum 8 characters
+    // 2. At least one uppercase letter
+    // 3. At least one lowercase letter
+    // 4. At least one number
+    // 5. At least one special character
+    const strengthRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    
+    // 6. Prevent sequential repetitions (e.g., "aaa", "111")
+    const repetitionRegex = /(.)\1\1/;
+
+    if (!strengthRegex.test(pass)) {
+      return "Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character.";
+    }
+
+    if (repetitionRegex.test(pass)) {
+      return "Password contains too many repeating characters (e.g. 'aaa'). Please choose a more complex sequence.";
+    }
+
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    // Validate password for sign-up
+    if (isSignUp) {
+      const passwordError = validatePassword(password);
+      if (passwordError) {
+        setError(passwordError);
+        setLoading(false);
+        return;
+      }
+    }
 
     try {
       if (!supabase) {
@@ -162,6 +194,11 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                       className="w-full bg-white/5 border border-white/10 rounded-2xl pl-14 pr-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 focus:bg-white/10 transition-all placeholder:text-pure-white/20"
                     />
                   </div>
+                  {isSignUp && (
+                    <p className="text-[9px] text-white/30 px-1 leading-relaxed">
+                      At least 8 characters, with uppercase, lowercase, numbers, and symbols. No long repetitions.
+                    </p>
+                  )}
                 </div>
 
                 <button

@@ -25,6 +25,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import { AuthModal } from './components/AuthModal';
 import { UserProfile } from './components/UserProfile';
+import { AdminDashboard } from './components/AdminDashboard';
 import { Logo } from './components/Logo';
 import { User as UserIcon } from 'lucide-react';
 
@@ -117,7 +118,31 @@ export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
   const { user, profile, signOut } = useAuth();
+  
+  // Handle keyboard events (ESC to close)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsMenuOpen(false);
+        setIsAuthModalOpen(false);
+        setIsProfileOpen(false);
+        setIsAdminOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Prevent scroll when mobile menu is open
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+  }, [isMenuOpen]);
   const [scrolled, setScrolled] = useState(false);
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
@@ -152,7 +177,14 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-pure-black">
+    <div className="min-h-screen relative overflow-hidden bg-pure-black selection:bg-accent-blue selection:text-pure-black">
+      {/* Skip to context for accessibility */}
+      <a 
+        href="#main-content" 
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-6 focus:py-3 focus:bg-accent-blue focus:text-pure-black focus:rounded-full focus:font-bold focus:uppercase focus:tracking-widest transition-all"
+      >
+        Skip to main content
+      </a>
       <motion.div
         className="fixed top-0 left-0 right-0 h-1 bg-accent-blue z-[100] origin-left"
         style={{ scaleX }}
@@ -173,20 +205,26 @@ export default function App() {
             <span className="font-serif text-xl tracking-tight text-pure-white/90">Trinity</span>
           </div>
 
-          <div className="hidden lg:flex items-center gap-2">
+          <nav className="hidden lg:flex items-center gap-2" aria-label="Desktop navigation">
             <div className="glass-panel px-10 py-3 rounded-full flex gap-10">
               <div className="specular-highlight rounded-full" />
-              {['Sermons', 'Events', 'Liturgies', 'Gallery', 'Prayer', 'History', 'Contact'].map((item) => (
-                <a 
-                  key={item} 
-                  href={`#${item.toLowerCase()}`}
-                  className="text-xs font-sans tracking-[0.2em] uppercase text-white/60 hover:text-white transition-colors"
-                >
-                  {item}
-                </a>
-              ))}
+              <ul className="flex gap-10 list-none m-0 p-0">
+                {['Sermons', 'Events', 'Liturgies', 'Gallery', 'Prayer', 'History', 'Contact'].map((item) => (
+                  <li key={item}>
+                    <a 
+                      href={`#${item.toLowerCase()}`}
+                      className="text-xs font-sans tracking-[0.2em] uppercase text-white/60 hover:text-white focus-visible:text-accent-blue focus-visible:outline-none transition-colors"
+                    >
+                      {item}
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <button className="glass-panel w-12 h-12 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors">
+            <button 
+              aria-label="Search site"
+              className="glass-panel w-12 h-12 rounded-full flex items-center justify-center hover:bg-white/10 focus-visible:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50 transition-colors"
+            >
               <SearchIcon className="w-4 h-4 text-white/70" />
             </button>
             
@@ -194,11 +232,12 @@ export default function App() {
               <div className="flex items-center gap-2">
                 <button 
                   onClick={() => setIsProfileOpen(true)}
-                  className="glass-panel p-1 pr-6 rounded-full text-[10px] uppercase tracking-widest font-bold hover:bg-white/10 transition-colors flex items-center gap-3"
+                  aria-label="View Sanctuary Profile"
+                  className="glass-panel p-1 pr-6 rounded-full text-[10px] uppercase tracking-widest font-bold hover:bg-white/10 focus-visible:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50 transition-colors flex items-center gap-3"
                 >
                   <div className="w-10 h-10 rounded-full overflow-hidden glass-panel border border-white/10 flex items-center justify-center">
                     {profile?.avatar_url ? (
-                      <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                      <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <UserIcon className="w-4 h-4 text-accent-blue" />
                     )}
@@ -207,7 +246,7 @@ export default function App() {
                 </button>
                 <button 
                   onClick={() => signOut()}
-                  className="glass-panel px-6 py-3 rounded-full text-[10px] uppercase tracking-widest font-bold hover:bg-white/10 transition-colors"
+                  className="glass-panel px-6 py-3 rounded-full text-[10px] uppercase tracking-widest font-bold hover:bg-white/10 focus-visible:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50 transition-colors"
                 >
                   Log Out
                 </button>
@@ -215,23 +254,26 @@ export default function App() {
             ) : (
               <button 
                 onClick={() => setIsAuthModalOpen(true)}
-                className="glass-panel px-6 py-3 rounded-full text-[10px] uppercase tracking-widest font-bold bg-accent-blue/10 hover:bg-accent-blue hover:text-pure-black transition-all"
+                className="glass-panel px-6 py-3 rounded-full text-[10px] uppercase tracking-widest font-bold bg-accent-blue/10 hover:bg-accent-blue hover:text-pure-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue transition-all"
               >
                 Sign In
               </button>
             )}
-          </div>
+          </nav>
 
           <button 
-            className="lg:hidden glass-panel w-12 h-12 rounded-full flex items-center justify-center"
+            className="lg:hidden glass-panel w-12 h-12 rounded-full flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={isMenuOpen}
+            aria-controls="mobile-menu"
           >
             {isMenuOpen ? <XIcon className="w-5 h-5" /> : <MenuIcon className="w-5 h-5" />}
           </button>
         </div>
       </nav>
 
-      <main className="relative z-10 pt-32 pb-24">
+      <main id="main-content" className="relative z-10 pt-32 pb-24" tabIndex={-1}>
         {/* Hero Section */}
         <section className="relative max-w-7xl mx-auto px-8 mb-32 group">
           {/* Background Highlight */}
@@ -843,12 +885,23 @@ export default function App() {
       <UserProfile 
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
+        onOpenAdmin={() => setIsAdminOpen(true)}
+      />
+
+      {/* Admin Dashboard */}
+      <AdminDashboard
+        isOpen={isAdminOpen}
+        onClose={() => setIsAdminOpen(false)}
       />
 
       {/* Mobile Menu */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div
+            id="mobile-menu"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Mobile navigation"
             initial={{ opacity: 0, x: '100%' }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: '100%' }}
@@ -858,21 +911,26 @@ export default function App() {
             <div className="absolute inset-0 bg-pure-black/95 backdrop-blur-2xl p-12 flex flex-col pt-32">
               <div className="liquid-blob w-[400px] h-[400px] bg-premium-blue/10 top-[-100px] right-[-100px] animate-blob-float" />
               
-              <div className="space-y-8 mb-12">
-                {['Sermons', 'Events', 'Liturgies', 'Gallery', 'Prayer', 'History', 'Contact'].map((item, i) => (
-                  <motion.a 
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                    key={item} 
-                    href={`#${item.toLowerCase()}`}
-                    onClick={() => setIsMenuOpen(false)}
-                    className="block text-4xl font-serif text-white/90 hover:text-accent-blue transition-colors italic"
-                  >
-                    {item}
-                  </motion.a>
-                ))}
-              </div>
+              <nav className="space-y-8 mb-12">
+                <ul className="space-y-8 list-none p-0 m-0">
+                  {['Sermons', 'Events', 'Liturgies', 'Gallery', 'Prayer', 'History', 'Contact'].map((item, i) => (
+                    <motion.li 
+                      key={item}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                    >
+                      <a 
+                        href={`#${item.toLowerCase()}`}
+                        onClick={() => setIsMenuOpen(false)}
+                        className="block text-4xl font-serif text-white/90 hover:text-accent-blue focus-visible:text-accent-blue focus-visible:outline-none transition-colors italic"
+                      >
+                        {item}
+                      </a>
+                    </motion.li>
+                  ))}
+                </ul>
+              </nav>
 
               <div className="mt-auto space-y-6">
                 {user ? (
@@ -882,11 +940,12 @@ export default function App() {
                         setIsProfileOpen(true);
                         setIsMenuOpen(false);
                       }}
-                      className="w-full glass-panel p-4 rounded-2xl flex items-center gap-4"
+                      aria-label="View Sanctuary Profile"
+                      className="w-full glass-panel p-4 rounded-2xl flex items-center gap-4 hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue"
                     >
                       <div className="w-12 h-12 rounded-full overflow-hidden glass-panel flex items-center justify-center">
                         {profile?.avatar_url ? (
-                          <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                          <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
                         ) : (
                           <UserIcon className="w-5 h-5 text-accent-blue" />
                         )}
@@ -901,7 +960,7 @@ export default function App() {
                         signOut();
                         setIsMenuOpen(false);
                       }}
-                      className="w-full glass-panel py-5 rounded-2xl text-[10px] uppercase tracking-widest font-bold hover:bg-red-500/10 hover:text-red-400 transition-all"
+                      className="w-full glass-panel py-5 rounded-2xl text-[10px] uppercase tracking-widest font-bold hover:bg-red-500/10 hover:text-red-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 transition-all"
                     >
                       Log Out from Sanctuary
                     </button>
@@ -912,13 +971,22 @@ export default function App() {
                       setIsAuthModalOpen(true);
                       setIsMenuOpen(false);
                     }}
-                    className="w-full glass-panel py-6 rounded-3xl text-[12px] uppercase tracking-[0.3em] font-bold bg-accent-blue text-pure-black hover:scale-[1.02] active:scale-[0.98] transition-all"
+                    className="w-full glass-panel py-6 rounded-3xl text-[12px] uppercase tracking-[0.3em] font-bold bg-accent-blue text-pure-black hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent-blue/50 transition-all"
                   >
                     Enter the Sanctuary
                   </button>
                 )}
               </div>
             </div>
+
+            {/* Accessible close button for mobile menu */}
+            <button
+              onClick={() => setIsMenuOpen(false)}
+              className="absolute top-8 right-8 w-12 h-12 glass-panel rounded-full flex items-center justify-center text-white/40 hover:text-white"
+              aria-label="Close mobile navigation"
+            >
+              <XIcon className="w-6 h-6" />
+            </button>
           </motion.div>
         )}
       </AnimatePresence>

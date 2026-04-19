@@ -16,6 +16,7 @@ import { useAuth } from '../contexts/AuthContext';
 interface UserProfileProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenAdmin?: () => void;
 }
 
 interface ProfileData {
@@ -24,8 +25,8 @@ interface ProfileData {
   bio: string | null;
 }
 
-export function UserProfile({ isOpen, onClose }: UserProfileProps) {
-  const { user, signOut, refreshProfile } = useAuth();
+export function UserProfile({ isOpen, onClose, onOpenAdmin }: UserProfileProps) {
+  const { user, profile: authProfile, signOut, refreshProfile, isAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -210,6 +211,18 @@ export function UserProfile({ isOpen, onClose }: UserProfileProps) {
               </div>
 
               <div className="mt-auto w-full space-y-4 relative z-10">
+                {isAdmin && (
+                  <button 
+                    onClick={() => {
+                      onClose();
+                      onOpenAdmin?.();
+                    }}
+                    className="w-full glass-panel py-4 rounded-2xl text-[10px] uppercase tracking-widest font-bold bg-accent-blue/10 text-accent-blue hover:bg-accent-blue hover:text-pure-black transition-all flex items-center justify-center gap-3 border-accent-blue/20"
+                  >
+                    <ShieldIcon className="w-3 h-3" />
+                    Command Center
+                  </button>
+                )}
                 <div className="glass-panel p-4 rounded-2xl flex items-center gap-4 bg-white/[0.03]">
                   <MailIcon className="w-4 h-4 text-white/30" />
                   <div className="overflow-hidden">

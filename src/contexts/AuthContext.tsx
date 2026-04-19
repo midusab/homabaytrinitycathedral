@@ -6,12 +6,14 @@ interface Profile {
   full_name: string | null;
   avatar_url: string | null;
   bio: string | null;
+  is_admin: boolean;
 }
 
 interface AuthContextType {
   user: SupabaseUser | null;
   session: Session | null;
   profile: Profile | null;
+  isAdmin: boolean;
   loading: boolean;
   refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -30,7 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('full_name, avatar_url, bio')
+        .select('full_name, avatar_url, bio, is_admin')
         .eq('id', userId)
         .single();
       
@@ -80,7 +82,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, refreshProfile, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      profile, 
+      isAdmin: profile?.is_admin || false, 
+      loading, 
+      refreshProfile, 
+      signOut 
+    }}>
       {children}
     </AuthContext.Provider>
   );
