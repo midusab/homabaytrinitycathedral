@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   BarChart3, 
@@ -147,7 +148,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
       fetchData();
     } catch (err: any) {
       console.error(err);
-      alert('Event action failed: ' + err.message);
+      toast.error('Event action failed: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -162,7 +163,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
       fetchData();
     } catch (err: any) {
       console.error(err);
-      alert('Event deletion failed: ' + err.message);
+      toast.error('Event deletion failed: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -193,7 +194,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
       fetchData();
     } catch (err: any) {
       console.error(err);
-      alert('Sermon archival failed: ' + err.message);
+      toast.error('Sermon archival failed: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -208,15 +209,15 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
       fetchData();
     } catch (err: any) {
       console.error(err);
-      alert('Sermon deletion failed: ' + err.message);
+      toast.error('Sermon deletion failed: ' + err.message);
     } finally {
       setLoading(false);
     }
   };
 
   // State for Site Settings and Gallery
-  const [siteSettings, setSiteSettings] = useState({ heroImageUrl: '', historyImageUrl: '' });
-  const [newGalleryItem, setNewGalleryItem] = useState({ description: '', date: '', time: '', file: null as File | null });
+  const [siteSettings, setSiteSettings] = useState({ heroFile: null as File | null, heroUrl: '', historyFile: null as File | null, historyUrl: '' });
+  const [newGalleryItem, setNewGalleryItem] = useState({ description: '', date: '', time: '', file: null as File | null, url: '' });
 
   const handleUpdateSiteSettings = async (type: 'hero' | 'history', file: File | null, url: string) => {
     if (!supabase) return;
@@ -224,17 +225,18 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
       setLoading(true);
       let imageUrl = url;
       if (file) {
-        const { data, error } = await supabase.storage.from('site-assets').upload(`${type}_${Date.now()}`, file);
+        const { data, error } = await supabase.storage.from('site-assets').upload(`site_assets/${type}_${Date.now()}`, file);
         if (error) throw error;
-        imageUrl = data.path;
+        const { data: publicURLData } = supabase.storage.from('site-assets').getPublicUrl(data.path);
+        imageUrl = publicURLData.publicUrl;
       }
       const { error } = await supabase.from('site_settings').update({ [`${type}_image_url`]: imageUrl }).eq('id', 1);
       if (error) throw error;
-      alert(`Updated ${type} image successfully.`);
+      toast.success(`Updated ${type} image successfully.`);
       fetchData();
     } catch (err: any) {
       console.error(err);
-      alert(`Failed to update ${type}: ` + err.message);
+      toast.error(`Failed to update ${type}: ` + err.message);
     } finally {
       setLoading(false);
     }
@@ -242,30 +244,38 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
 
   const handleUploadGalleryItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!supabase || !newGalleryItem.file) return;
+    if (!supabase || (!newGalleryItem.file && !newGalleryItem.url)) return;
     try {
       setLoading(true);
-      const { data, error: uploadError } = await supabase.storage.from('gallery-images').upload(`gallery_${Date.now()}`, newGalleryItem.file);
-      if (uploadError) throw uploadError;
+      let imageUrl = newGalleryItem.url;
+      if (newGalleryItem.file) {
+        const { data, error: uploadError } = await supabase.storage.from('gallery-images').upload(`gallery/${Date.now()}`, newGalleryItem.file);
+        if (uploadError) throw uploadError;
+        const { data: publicURLData } = supabase.storage.from('gallery-images').getPublicUrl(data.path);
+        imageUrl = publicURLData.publicUrl;
+      }
       
       const { error: insertError } = await supabase.from('gallery').insert([{
         description: newGalleryItem.description,
         date: newGalleryItem.date,
         time: newGalleryItem.time,
-        image_url: data.path
+        image_url: imageUrl
       }]);
       if (insertError) throw insertError;
       
-      setNewGalleryItem({ description: '', date: '', time: '', file: null });
-      alert('Gallery item uploaded successfully.');
+      setNewGalleryItem({ description: '', date: '', time: '', file: null, url: '' });
+      toast.success('Gallery item uploaded successfully.');
       fetchData();
     } catch (err: any) {
       console.error(err);
-      alert('Gallery upload failed: ' + err.message);
+      toast.error('Gallery upload failed: ' + err.message);
     } finally {
       setLoading(false);
     }
   };
+
+  // State to hold draft responses
+  const [intentionResponses, setIntentionResponses] = useState<Record<string, string>>({});
 
   const handleRespondIntention = async (id: string) => {
     if (!supabase) return;
@@ -285,7 +295,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
       setIntentionResponses(prev => ({ ...prev, [id]: '' }));
     } catch (err: any) {
       console.error(err);
-      alert('Failed to send response: ' + err.message);
+      toast.error('Failed to send response: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -422,12 +432,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                       <h2 className="text-4xl font-serif mb-2 capitalize">{activeTab}</h2>
                       <p className="text-[10px] uppercase tracking-[0.2em] text-white/40">Managing Trinity Cathedral digital sanctuary</p>
                     </div>
-                    {activeTab !== 'overview' && activeTab !== 'profile' && (
-                      <button className="glass-panel px-6 py-3 rounded-full text-[10px] uppercase tracking-widest font-bold bg-accent-blue/10 hover:bg-accent-blue hover:text-pure-black transition-all flex items-center gap-2">
-                        <Plus className="w-3 h-3" />
-                        Create New Record
-                      </button>
-                    )}
+                    {/* Header area now just title/desc */}
                   </header>
 
                   <div className="flex-1">
@@ -758,13 +763,17 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                       <div className="glass-panel p-8 rounded-lg space-y-8">
                         <h4 className="text-lg font-serif">Hero Section & History Image</h4>
                         <div className="grid md:grid-cols-2 gap-8">
-                            <div className="space-y-3">
+                            <div className="space-y-4">
                                 <label className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Hero Image</label>
-                                <input type="file" onChange={(e) => handleUpdateSiteSettings('hero', e.target.files?.[0] || null, '')} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" />
+                                <input type="file" onChange={(e) => setSiteSettings(prev => ({...prev, heroFile: e.target.files?.[0] || null}))} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" />
+                                <input type="text" onChange={(e) => setSiteSettings(prev => ({...prev, heroUrl: e.target.value}))} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" placeholder="OR Enter Image URL" />
+                                <button onClick={() => handleUpdateSiteSettings('hero', siteSettings.heroFile, siteSettings.heroUrl)} disabled={loading} className="glass-panel w-full py-3 rounded-md text-[10px] uppercase font-bold hover:bg-white/10 transition-colors disabled:opacity-50">Save Hero</button>
                             </div>
-                            <div className="space-y-3">
+                            <div className="space-y-4">
                                 <label className="text-[9px] uppercase tracking-widest text-white/40 font-bold">History Image</label>
-                                <input type="file" onChange={(e) => handleUpdateSiteSettings('history', e.target.files?.[0] || null, '')} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" />
+                                <input type="file" onChange={(e) => setSiteSettings(prev => ({...prev, historyFile: e.target.files?.[0] || null}))} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" />
+                                <input type="text" onChange={(e) => setSiteSettings(prev => ({...prev, historyUrl: e.target.value}))} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" placeholder="OR Enter Image URL" />
+                                <button onClick={() => handleUpdateSiteSettings('history', siteSettings.historyFile, siteSettings.historyUrl)} disabled={loading} className="glass-panel w-full py-3 rounded-md text-[10px] uppercase font-bold hover:bg-white/10 transition-colors disabled:opacity-50">Save History</button>
                             </div>
                         </div>
                       </div>
@@ -772,11 +781,12 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                     {activeTab === 'gallery' && (
                       <form onSubmit={handleUploadGalleryItem} className="glass-panel p-8 rounded-lg space-y-8">
                         <h4 className="text-lg font-serif">Event Gallery</h4>
-                        <div className="grid md:grid-cols-3 gap-4">
+                        <div className="grid md:grid-cols-2 gap-4">
                            <input type="text" value={newGalleryItem.description} onChange={e => setNewGalleryItem({...newGalleryItem, description: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" placeholder="Description" required />
                            <input type="date" value={newGalleryItem.date} onChange={e => setNewGalleryItem({...newGalleryItem, date: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" required />
                            <input type="time" value={newGalleryItem.time} onChange={e => setNewGalleryItem({...newGalleryItem, time: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" required />
-                           <input type="file" onChange={e => setNewGalleryItem({...newGalleryItem, file: e.target.files?.[0] || null})} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" required />
+                           <input type="file" onChange={e => setNewGalleryItem({...newGalleryItem, file: e.target.files?.[0] || null})} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" />
+                           <input type="text" value={newGalleryItem.url} onChange={e => setNewGalleryItem({...newGalleryItem, url: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" placeholder="OR Image URL" />
                         </div>
                          <button type="submit" disabled={loading} className="glass-panel w-full py-4 rounded-md text-[10px] uppercase font-bold hover:bg-white/10 transition-colors disabled:opacity-50">
                              {loading ? 'Uploading...' : 'Upload Event Image'}

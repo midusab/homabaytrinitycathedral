@@ -4,10 +4,13 @@ import App from './App.tsx';
 import './index.css';
 import { AuthProvider } from './contexts/AuthContext.tsx';
 
+import { Toaster } from 'sonner';
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
       <App />
+      <Toaster position="bottom-right" richColors />
     </AuthProvider>
   </StrictMode>,
 );
