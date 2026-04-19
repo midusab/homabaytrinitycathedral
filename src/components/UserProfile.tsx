@@ -198,9 +198,9 @@ export function UserProfile({ isOpen, onClose, onOpenAdmin }: UserProfileProps) 
             initial={{ opacity: 0, scale: 0.95, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 30 }}
-            className="glass-panel w-full max-w-4xl min-h-[600px] rounded-[64px] relative z-10 overflow-hidden flex flex-col md:flex-row"
+            className="glass-panel w-full max-w-4xl min-h-[600px] rounded-[48px] relative z-10 overflow-hidden flex flex-col md:flex-row"
           >
-            <div className="specular-highlight rounded-[64px]" />
+            <div className="specular-highlight rounded-[48px]" />
             
             {/* Sidebar / Visual Aspect */}
             <div className="w-full md:w-1/3 bg-white/[0.02] p-12 flex flex-col items-center border-r border-white/5 relative">
@@ -252,13 +252,13 @@ export function UserProfile({ isOpen, onClose, onOpenAdmin }: UserProfileProps) 
                       onClose();
                       onOpenAdmin?.();
                     }}
-                    className="w-full glass-panel py-4 rounded-2xl text-[10px] uppercase tracking-widest font-bold bg-accent-blue/10 text-accent-blue hover:bg-accent-blue hover:text-pure-black transition-all flex items-center justify-center gap-3 border-accent-blue/20"
+                    className="w-full glass-panel py-4 rounded-lg text-[10px] uppercase tracking-widest font-bold bg-accent-blue/10 text-accent-blue hover:bg-accent-blue hover:text-pure-black transition-all flex items-center justify-center gap-3 border-accent-blue/20"
                   >
                     <ShieldIcon className="w-3 h-3" />
                     Command Center
                   </button>
                 )}
-                <div className="glass-panel p-4 rounded-2xl flex items-center gap-4 bg-white/[0.03]">
+                <div className="glass-panel p-4 rounded-lg flex items-center gap-4 bg-white/[0.03]">
                   <MailIcon className="w-4 h-4 text-white/30" />
                   <div className="overflow-hidden">
                     <p className="text-[9px] uppercase tracking-widest text-white/40 block">Email</p>
@@ -270,7 +270,7 @@ export function UserProfile({ isOpen, onClose, onOpenAdmin }: UserProfileProps) 
                     signOut();
                     onClose();
                   }}
-                  className="w-full glass-panel py-4 rounded-2xl text-[10px] uppercase tracking-widest font-bold hover:bg-red-500/20 hover:text-red-400 transition-all flex items-center justify-center gap-3"
+                  className="w-full glass-panel py-4 rounded-lg text-[10px] uppercase tracking-widest font-bold hover:bg-red-500/20 hover:text-red-400 transition-all flex items-center justify-center gap-3"
                 >
                   <LogOutIcon className="w-3 h-3" />
                   Log Out
@@ -297,7 +297,7 @@ export function UserProfile({ isOpen, onClose, onOpenAdmin }: UserProfileProps) 
                 <motion.div 
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`mb-8 p-4 rounded-2xl flex items-center gap-4 text-xs font-bold uppercase tracking-widest ${
+                  className={`mb-8 p-4 rounded-lg flex items-center gap-4 text-xs font-bold uppercase tracking-widest ${
                     message.type === 'success' 
                     ? 'bg-accent-blue/10 border border-accent-blue/20 text-accent-blue' 
                     : 'bg-red-500/10 border border-red-500/20 text-red-500'
@@ -323,14 +323,14 @@ export function UserProfile({ isOpen, onClose, onOpenAdmin }: UserProfileProps) 
                         type="text" 
                         value={profile.full_name}
                         onChange={(e) => setProfile(prev => ({ ...prev, full_name: e.target.value }))}
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 focus:bg-white/10 transition-all placeholder:text-pure-white/20"
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 focus:bg-white/10 transition-all placeholder:text-pure-white/20"
                       />
                       <p className="text-[9px] text-white/30 italic">How you appear to church staff and community</p>
                     </div>
 
                     <div className="space-y-3">
                       <label className="text-[10px] uppercase tracking-[0.2em] text-accent-blue font-bold ml-1">Spiritual Status</label>
-                      <div className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white/40 flex items-center gap-3 cursor-not-allowed">
+                      <div className="w-full bg-white/5 border border-white/10 rounded-lg px-6 py-4 text-sm text-white/40 flex items-center gap-3 cursor-not-allowed">
                         <CheckIcon className="w-4 h-4 text-accent-blue" />
                         Verified Parishioner
                       </div>
@@ -344,7 +344,7 @@ export function UserProfile({ isOpen, onClose, onOpenAdmin }: UserProfileProps) 
                       value={profile.bio || ''}
                       onChange={(e) => setProfile(prev => ({ ...prev, bio: e.target.value }))}
                       placeholder="Share a brief message or your role in the cathedral community..."
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-sm focus:outline-none focus:border-accent-blue/50 focus:bg-white/10 transition-all placeholder:text-pure-white/20 resize-none leading-relaxed"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-6 py-5 text-sm focus:outline-none focus:border-accent-blue/50 focus:bg-white/10 transition-all placeholder:text-pure-white/20 resize-none leading-relaxed"
                     />
                   </div>
 
@@ -357,7 +357,7 @@ export function UserProfile({ isOpen, onClose, onOpenAdmin }: UserProfileProps) 
                     <button 
                       type="submit"
                       disabled={saving}
-                      className="glass-panel px-12 py-5 rounded-2xl text-[11px] uppercase tracking-[0.3em] font-bold bg-white/5 hover:bg-accent-blue hover:text-pure-black transition-all flex items-center gap-3"
+                      className="glass-panel px-12 py-5 rounded-lg text-[11px] uppercase tracking-[0.3em] font-bold bg-white/5 hover:bg-accent-blue hover:text-pure-black transition-all flex items-center gap-3"
                     >
                       {saving ? (
                         <>
@@ -381,7 +381,7 @@ export function UserProfile({ isOpen, onClose, onOpenAdmin }: UserProfileProps) 
                   <h3 className="text-2xl font-serif mb-6">My Sacred Intentions</h3>
                   <div className="space-y-4">
                     {myIntentions.map(intention => (
-                      <div key={intention.id} className="glass-panel p-6 rounded-2xl border-white/5 bg-white/[0.02]">
+                      <div key={intention.id} className="glass-panel p-6 rounded-lg border-white/5 bg-white/[0.02]">
                         <div className="flex justify-between items-start mb-4">
                           <p className="text-sm font-serif italic text-white/80">"{intention.message}"</p>
                           <span className={`text-[9px] uppercase tracking-widest px-3 py-1 rounded-full font-bold whitespace-nowrap ml-4 ${

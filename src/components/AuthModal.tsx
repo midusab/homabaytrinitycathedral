@@ -106,9 +106,9 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="glass-panel w-full max-w-md p-10 rounded-[48px] relative z-10"
+            className="glass-panel w-full max-w-md p-10 rounded-[32px] relative z-10"
           >
-            <div className="specular-highlight rounded-[48px]" />
+            <div className="specular-highlight rounded-[32px]" />
             <button
               onClick={onClose}
               className="absolute top-6 right-6 text-pure-white/40 hover:text-pure-white transition-colors"
@@ -136,7 +136,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 </p>
                 <button
                   onClick={onClose}
-                  className="w-full glass-panel py-4 rounded-2xl text-[11px] uppercase tracking-[0.3em] font-bold bg-white/10 hover:bg-accent-blue hover:text-pure-black transition-all"
+                  className="w-full glass-panel py-4 rounded-lg text-[11px] uppercase tracking-[0.3em] font-bold bg-white/10 hover:bg-accent-blue hover:text-pure-black transition-all"
                 >
                   Close
                 </button>
@@ -144,7 +144,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
                 {error && (
-                  <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] uppercase tracking-widest font-bold py-3 px-4 rounded-xl text-center">
+                  <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] uppercase tracking-widest font-bold py-3 px-4 rounded-md text-center">
                     {error}
                   </div>
                 )}
@@ -160,7 +160,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         placeholder="Saint John"
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl pl-14 pr-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 focus:bg-white/10 transition-all placeholder:text-pure-white/20"
+                        className="w-full bg-white/5 border border-white/10 rounded-lg pl-14 pr-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 focus:bg-white/10 transition-all placeholder:text-pure-white/20"
                       />
                     </div>
                   </div>
@@ -176,7 +176,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="john@cathedral.org"
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl pl-14 pr-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 focus:bg-white/10 transition-all placeholder:text-pure-white/20"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg pl-14 pr-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 focus:bg-white/10 transition-all placeholder:text-pure-white/20"
                     />
                   </div>
                 </div>
@@ -191,7 +191,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl pl-14 pr-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 focus:bg-white/10 transition-all placeholder:text-pure-white/20"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg pl-14 pr-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 focus:bg-white/10 transition-all placeholder:text-pure-white/20"
                     />
                   </div>
                   {isSignUp && (
@@ -204,7 +204,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 <button
                   disabled={loading}
                   type="submit"
-                  className="w-full glass-panel py-5 rounded-2xl text-[11px] uppercase tracking-[0.3em] font-bold bg-white/10 hover:bg-accent-blue hover:text-pure-black transition-all flex items-center justify-center gap-2"
+                  className="w-full glass-panel py-5 rounded-lg text-[11px] uppercase tracking-[0.3em] font-bold bg-white/10 hover:bg-accent-blue hover:text-pure-black transition-all flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <Loader2Icon className="w-4 h-4 animate-spin" />

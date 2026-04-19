@@ -247,9 +247,9 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
       <motion.div 
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="glass-panel w-full h-full max-w-7xl rounded-none md:rounded-[48px] relative z-10 flex flex-col md:flex-row overflow-hidden shadow-2xl border-white/5"
+        className="glass-panel w-full h-full max-w-7xl rounded-none md:rounded-[32px] relative z-10 flex flex-col md:flex-row overflow-hidden shadow-2xl border-white/5"
       >
-        <div className="specular-highlight rounded-[48px]" />
+        <div className="specular-highlight rounded-[32px]" />
 
         {!isAuthenticated ? (
           <div className="flex-1 flex items-center justify-center p-8">
@@ -268,11 +268,11 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                     value={masterPassword}
                     onChange={(e) => setMasterPassword(e.target.value)}
                     placeholder="••••••••••••"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-center text-lg focus:outline-none focus:border-accent-blue/50 focus:bg-white/10 transition-all placeholder:text-pure-white/10 tracking-[0.5em]"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-6 py-5 text-center text-lg focus:outline-none focus:border-accent-blue/50 focus:bg-white/10 transition-all placeholder:text-pure-white/10 tracking-[0.5em]"
                   />
                 </div>
                 {authError && <p className="text-red-500 text-[10px] uppercase tracking-widest font-bold">{authError}</p>}
-                <button type="submit" className="w-full glass-panel py-5 rounded-2xl text-[11px] uppercase tracking-[0.3em] font-bold bg-white/5 hover:bg-accent-blue hover:text-pure-black transition-all">
+                <button type="submit" className="w-full glass-panel py-5 rounded-lg text-[11px] uppercase tracking-[0.3em] font-bold bg-white/5 hover:bg-accent-blue hover:text-pure-black transition-all">
                   Authorize Access
                 </button>
               </form>
@@ -305,7 +305,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id as Tab)}
-                    className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-[11px] uppercase tracking-widest font-medium transition-all ${
+                    className={`w-full flex items-center gap-4 px-6 py-4 rounded-lg text-[11px] uppercase tracking-widest font-medium transition-all ${
                       activeTab === item.id 
                       ? 'bg-accent-blue text-pure-black' 
                       : 'text-white/40 hover:bg-white/5 hover:text-white'
@@ -328,7 +328,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                     <p className="text-[8px] uppercase tracking-widest text-white/30">Privileged Session</p>
                   </div>
                 </div>
-                <button onClick={onClose} className="w-full glass-panel py-4 rounded-xl text-[9px] uppercase tracking-[0.2em] font-bold hover:bg-white/10 transition-colors">
+                <button onClick={onClose} className="w-full glass-panel py-4 rounded-md text-[9px] uppercase tracking-[0.2em] font-bold hover:bg-white/10 transition-colors">
                   Exit Dashboard
                 </button>
               </div>
@@ -365,7 +365,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                           { label: 'Prayer Intentions', value: stats.intentions.toLocaleString(), delta: 'Spiritual Outreach', icon: MessageSquare },
                           { label: 'Liturgical Events', value: stats.events.toLocaleString(), delta: 'Parish Life', icon: Calendar },
                         ].map((stat, i) => (
-                          <div key={i} className="glass-panel p-8 rounded-3xl relative">
+                          <div key={i} className="glass-panel p-8 rounded-2xl relative">
                             <stat.icon className="w-8 h-8 text-accent-blue/40 absolute top-8 right-8" />
                             <p className="text-[10px] uppercase tracking-widest text-white/40 mb-4">{stat.label}</p>
                             <h3 className="text-5xl font-serif mb-2">{stat.value}</h3>
@@ -373,7 +373,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                           </div>
                         ))}
                         
-                        <div className="md:col-span-3 glass-panel p-8 rounded-[32px] mt-8 min-h-[300px]">
+                        <div className="md:col-span-3 glass-panel p-8 rounded-2xl mt-8 min-h-[300px]">
                            <div className="flex items-center justify-between mb-8">
                              <h4 className="text-xl font-serif">Recent System Activity</h4>
                              <Bell className="w-4 h-4 text-white/20" />
@@ -390,7 +390,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                     {activeTab === 'events' && (
                       <div className="space-y-8">
                          {/* Create Event Form */}
-                         <form onSubmit={handleCreateEvent} className="glass-panel p-8 rounded-3xl border-accent-blue/10 bg-accent-blue/5">
+                         <form onSubmit={handleCreateEvent} className="glass-panel p-8 rounded-2xl border-accent-blue/10 bg-accent-blue/5">
                             <h4 className="text-lg font-serif mb-6">Create New Liturgical Event</h4>
                              <div className="grid md:grid-cols-2 gap-6">
                                <div className="space-y-3">
@@ -399,7 +399,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                                     required
                                     value={newEvent.title}
                                     onChange={e => setNewEvent({...newEvent, title: e.target.value})}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50" 
+                                    className="w-full bg-white/5 border border-white/10 rounded-md px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50" 
                                     placeholder="Easter Vigil" 
                                   />
                                </div>
@@ -410,7 +410,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                                     type="date"
                                     value={newEvent.date}
                                     onChange={e => setNewEvent({...newEvent, date: e.target.value})}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50" 
+                                    className="w-full bg-white/5 border border-white/10 rounded-md px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50" 
                                   />
                                </div>
                                <div className="space-y-3 md:col-span-2">
@@ -418,20 +418,20 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                                   <textarea 
                                     value={newEvent.description}
                                     onChange={e => setNewEvent({...newEvent, description: e.target.value})}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 resize-none h-24" 
+                                    className="w-full bg-white/5 border border-white/10 rounded-md px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 resize-none h-24" 
                                     placeholder="Brief description of the event..." 
                                   />
                                </div>
                             </div>
                             <div className="mt-8 flex justify-end">
-                               <button disabled={loading} type="submit" className="glass-panel px-10 py-4 rounded-xl text-[10px] uppercase tracking-widest font-bold hover:bg-accent-blue hover:text-pure-black transition-all">Publish Event</button>
+                               <button disabled={loading} type="submit" className="glass-panel px-10 py-4 rounded-md text-[10px] uppercase tracking-widest font-bold hover:bg-accent-blue hover:text-pure-black transition-all">Publish Event</button>
                             </div>
                          </form>
 
                          <div className="grid gap-6 mt-8">
                            {events.map(event => (
-                             <div key={event.id} className="glass-panel p-6 rounded-2xl flex items-center gap-6 group hover:bg-white/[0.03] transition-colors">
-                               <div className="w-24 h-24 bg-white/5 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0 border border-white/5">
+                             <div key={event.id} className="glass-panel p-6 rounded-lg flex items-center gap-6 group hover:bg-white/[0.03] transition-colors">
+                               <div className="w-24 h-24 bg-white/5 rounded-md overflow-hidden flex items-center justify-center flex-shrink-0 border border-white/5">
                                  {event.image_url ? (
                                    <img src={event.image_url} alt="" className="w-full h-full object-cover" />
                                  ) : (
@@ -459,7 +459,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
 
                     {activeTab === 'sermons' && (
                       <div className="space-y-8">
-                         <form onSubmit={handleCreateSermon} className="glass-panel p-8 rounded-3xl border-accent-blue/10 bg-accent-blue/5">
+                         <form onSubmit={handleCreateSermon} className="glass-panel p-8 rounded-2xl border-accent-blue/10 bg-accent-blue/5">
                             <h4 className="text-lg font-serif mb-6">Upload New Sermon</h4>
                             <div className="grid md:grid-cols-2 gap-6">
                                <div className="space-y-3">
@@ -468,7 +468,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                                     required
                                     value={newSermon.title}
                                     onChange={e => setNewSermon({...newSermon, title: e.target.value})}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50" 
+                                    className="w-full bg-white/5 border border-white/10 rounded-md px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50" 
                                     placeholder="The Path to Clarity" 
                                   />
                                </div>
@@ -477,7 +477,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                                   <select 
                                     value={newSermon.type}
                                     onChange={e => setNewSermon({...newSermon, type: e.target.value as 'link' | 'local'})}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 [&>option]:bg-pure-black"
+                                    className="w-full bg-white/5 border border-white/10 rounded-md px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 [&>option]:bg-pure-black"
                                   >
                                     <option value="link">External Link (YouTube/Vimeo)</option>
                                     <option value="local">Direct Video Upload</option>
@@ -491,7 +491,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                                         required={newSermon.type === 'link'}
                                         value={newSermon.url}
                                         onChange={e => setNewSermon({...newSermon, url: e.target.value})}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50" 
+                                        className="w-full bg-white/5 border border-white/10 rounded-md px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50" 
                                         placeholder="https://youtube.com/watch?v=..." 
                                       />
                                     </>
@@ -530,7 +530,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                                             setLoading(false);
                                           }
                                         }}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:uppercase file:tracking-widest file:font-semibold file:bg-accent-blue file:text-pure-black hover:file:bg-accent-blue/80" 
+                                        className="w-full bg-white/5 border border-white/10 rounded-md px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:uppercase file:tracking-widest file:font-semibold file:bg-accent-blue file:text-pure-black hover:file:bg-accent-blue/80" 
                                       />
                                       {newSermon.url && newSermon.type === 'local' && (
                                         <p className="text-[10px] text-green-400 mt-2">Video uploaded successfully!</p>
@@ -540,13 +540,13 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                                </div>
                             </div>
                             <div className="mt-8 flex justify-end">
-                               <button disabled={loading || (!newSermon.url && newSermon.type === 'local')} type="submit" className="glass-panel px-10 py-4 rounded-xl text-[10px] uppercase tracking-widest font-bold hover:bg-accent-blue hover:text-pure-black transition-all disabled:opacity-50">Publish Video</button>
+                               <button disabled={loading || (!newSermon.url && newSermon.type === 'local')} type="submit" className="glass-panel px-10 py-4 rounded-md text-[10px] uppercase tracking-widest font-bold hover:bg-accent-blue hover:text-pure-black transition-all disabled:opacity-50">Publish Video</button>
                             </div>
                          </form>
 
                          <div className="grid gap-6 mt-8">
                            {sermons.map(sermon => (
-                             <div key={sermon.id} className="glass-panel p-6 rounded-2xl flex items-center justify-between group hover:bg-white/[0.03] transition-colors">
+                             <div key={sermon.id} className="glass-panel p-6 rounded-lg flex items-center justify-between group hover:bg-white/[0.03] transition-colors">
                                <div>
                                   <h4 className="text-lg font-serif mb-1">{sermon.title}</h4>
                                   <p className="text-[10px] uppercase tracking-widest text-white/40">
@@ -578,7 +578,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                     {activeTab === 'intentions' && (
                       <div className="space-y-6">
                         {intentions.map(intention => (
-                          <div key={intention.id} className="glass-panel p-8 rounded-3xl relative group">
+                          <div key={intention.id} className="glass-panel p-8 rounded-2xl relative group">
                             <div className="flex justify-between items-start mb-6">
                                <div className="flex items-center gap-4">
                                   <div className="w-10 h-10 rounded-full bg-accent-blue/10 flex items-center justify-center text-accent-blue text-xs font-bold font-serif">
@@ -613,13 +613,13 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                                  <input 
                                    value={intentionResponses[intention.id] || ''}
                                    onChange={e => setIntentionResponses({...intentionResponses, [intention.id]: e.target.value})}
-                                   className="flex-1 bg-white/5 border border-white/10 rounded-xl px-6 py-3 text-xs focus:outline-none focus:border-accent-blue/30" 
+                                   className="flex-1 bg-white/5 border border-white/10 rounded-md px-6 py-3 text-xs focus:outline-none focus:border-accent-blue/30" 
                                    placeholder="Type an encouraging response from the cathedral..." 
                                  />
                                  <button 
                                    onClick={() => handleRespondIntention(intention.id)}
                                    disabled={loading || !intentionResponses[intention.id]}
-                                   className="glass-panel p-3 rounded-xl hover:bg-accent-blue hover:text-pure-black transition-all disabled:opacity-50 disabled:hover:bg-white/5 disabled:hover:text-white"
+                                   className="glass-panel p-3 rounded-md hover:bg-accent-blue hover:text-pure-black transition-all disabled:opacity-50 disabled:hover:bg-white/5 disabled:hover:text-white"
                                  >
                                     <Check className="w-4 h-4" />
                                  </button>
@@ -634,8 +634,8 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                     {activeTab === 'profile' && (
                        <div className="max-w-2xl mx-auto py-12 text-center">
                           <h4 className="text-2xl font-serif mb-8">Administrator Privileges</h4>
-                          <div className="glass-panel p-12 rounded-[48px] relative overflow-hidden">
-                             <div className="specular-highlight rounded-[48px]" />
+                          <div className="glass-panel p-12 rounded-[32px] relative overflow-hidden">
+                             <div className="specular-highlight rounded-[32px]" />
                              <div className="w-24 h-24 rounded-full glass-panel mx-auto mb-8 flex items-center justify-center border-accent-blue/20">
                                 <ShieldCheck className="w-10 h-10 text-accent-blue" />
                              </div>
@@ -643,11 +643,11 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                              <h3 className="text-3xl font-serif mb-8">{profile?.full_name}</h3>
                              
                              <div className="space-y-4 text-left">
-                                <div className="p-4 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between">
+                                <div className="p-4 rounded-lg bg-white/5 border border-white/5 flex items-center justify-between">
                                    <span className="text-[10px] uppercase tracking-widest text-white/40">2FA Status</span>
                                    <span className="text-[10px] uppercase tracking-widest font-bold text-green-500">Active</span>
                                 </div>
-                                <div className="p-4 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between">
+                                <div className="p-4 rounded-lg bg-white/5 border border-white/5 flex items-center justify-between">
                                    <span className="text-[10px] uppercase tracking-widest text-white/40">Last Logged</span>
                                    <span className="text-[10px] uppercase tracking-widest font-bold">Just Now</span>
                                 </div>

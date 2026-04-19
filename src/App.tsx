@@ -291,7 +291,7 @@ export default function App() {
           {/* Background Highlight */}
           <motion.div 
             style={{ y: heroY, opacity: heroOpacity, scale: heroScale, filter: heroFilter }}
-            className="absolute inset-0 -mx-8 lg:-mx-24 -z-10 overflow-hidden rounded-[64px]"
+            className="absolute inset-0 -mx-8 lg:-mx-24 -z-10 overflow-hidden rounded-[48px]"
           >
             <div className="absolute inset-0 bg-pure-black/60 backdrop-blur-[2px] z-10" />
             <motion.img 
@@ -352,9 +352,9 @@ export default function App() {
                 transition={{ duration: 1.2, ease: "easeOut" }}
                 className="relative"
               >
-                <div className="glass-panel p-2 rounded-[48px] overflow-hidden">
-                  <div className="specular-highlight rounded-[48px]" />
-                  <div className="aspect-[4/5] rounded-[40px] overflow-hidden relative">
+                <div className="glass-panel p-2 rounded-[32px] overflow-hidden">
+                  <div className="specular-highlight rounded-[32px]" />
+                  <div className="aspect-[4/5] rounded-[28px] overflow-hidden relative">
                     <img 
                       src="https://images.unsplash.com/photo-1548696444-12347de5fd04?q=80&w=1200&auto=format&fit=crop" 
                       alt="Trinity Cathedral Altar" 
@@ -365,7 +365,7 @@ export default function App() {
                   </div>
                 </div>
                 {/* Decorative Elements */}
-                <div className="absolute -bottom-6 -left-6 glass-panel p-4 rounded-2xl flex items-center gap-3 backdrop-blur-xl border-white/20">
+                <div className="absolute -bottom-6 -left-6 glass-panel p-4 rounded-lg flex items-center gap-3 backdrop-blur-xl border-white/20">
                   <div className="w-10 h-10 rounded-full bg-accent-blue/20 flex items-center justify-center">
                     <SparklesIcon className="w-5 h-5 text-accent-blue" />
                   </div>
@@ -401,7 +401,7 @@ export default function App() {
               viewport={{ once: true }}
               className="flex gap-4"
             >
-              <div className="glass-panel px-6 py-3 rounded-2xl flex items-center gap-3">
+              <div className="glass-panel px-6 py-3 rounded-lg flex items-center gap-3">
                 <div className="w-2 h-2 rounded-full bg-accent-blue animate-pulse" />
                 <span className="text-[10px] uppercase tracking-widest font-bold">Confessions: Sat 3:30 PM</span>
               </div>
@@ -422,9 +422,9 @@ export default function App() {
                   damping: 20
                 }}
                 viewport={{ once: true }}
-                className="glass-panel p-6 rounded-[28px] group hover:bg-white/10 transition-all text-center cursor-default shadow-xl shadow-black/20"
+                className="glass-panel p-6 rounded-xl group hover:bg-white/10 transition-all text-center cursor-default shadow-xl shadow-black/20"
               >
-                <div className="specular-highlight rounded-[28px]" />
+                <div className="specular-highlight rounded-xl" />
                 <div className="text-accent-blue mb-4 flex justify-center">
                   <div className="w-10 h-10 glass-panel rounded-full flex items-center justify-center">
                     <SparklesIcon className="w-4 h-4 opacity-70" />
@@ -443,7 +443,7 @@ export default function App() {
         </section>
 
         {/* Cinematic Sanctuary Visual */}
-        <section className="relative h-[60vh] mb-32 overflow-hidden mx-8 rounded-[64px]">
+        <section className="relative h-[60vh] mb-32 overflow-hidden mx-8 rounded-[48px]">
           <motion.div
             initial={{ scale: 1.1 }}
             whileInView={{ scale: 1 }}
@@ -462,9 +462,9 @@ export default function App() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              className="glass-panel px-12 py-10 rounded-[40px]"
+              className="glass-panel px-12 py-10 rounded-[28px]"
             >
-              <div className="specular-highlight rounded-[40px]" />
+              <div className="specular-highlight rounded-[28px]" />
               <h2 className="text-4xl md:text-6xl font-serif mb-6 italic">A Prayer in Stone</h2>
               <p className="text-pure-white/40 max-w-xl mx-auto font-sans tracking-widest text-xs uppercase leading-loose">
                 Every arch, every window, every shadow is designed to lift the soul toward the infinite. 
@@ -491,13 +491,13 @@ export default function App() {
                 <p className="text-pure-white/50 leading-relaxed mb-12 font-sans">
                   The Cathedral family is here to carry your burdens in prayer. Submit your intentions to be shared with our clergy or displayed on our community board.
                 </p>
-                <div className="glass-panel p-8 rounded-[32px] relative overflow-hidden">
-                  <div className="specular-highlight rounded-[32px]" />
+                <div className="glass-panel p-8 rounded-2xl relative overflow-hidden">
+                  <div className="specular-highlight rounded-2xl" />
                   <h4 className="font-serif text-xl mb-6">Submit an Intention</h4>
                   {user ? (
                     <form onSubmit={handleSubmitIntention} className="space-y-4">
                       {intentionSuccess ? (
-                        <div className="bg-green-500/10 border border-green-500/20 text-green-400 p-4 rounded-2xl text-sm mb-4 text-center">
+                        <div className="bg-green-500/10 border border-green-500/20 text-green-400 p-4 rounded-lg text-sm mb-4 text-center">
                           Your intention has been submitted to the clergy.
                         </div>
                       ) : (
@@ -506,14 +506,14 @@ export default function App() {
                             type="text" 
                             disabled
                             value={profile?.full_name || user.email || 'Anonymous Parisher'}
-                            className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm focus:outline-none transition-all text-white/50 cursor-not-allowed"
+                            className="w-full bg-white/5 border border-white/10 rounded-lg px-6 py-4 text-sm focus:outline-none transition-all text-white/50 cursor-not-allowed"
                           />
                           <textarea 
                             rows={4}
                             value={intentionMessage}
                             onChange={(e) => setIntentionMessage(e.target.value)}
                             placeholder="Your prayer intention..."
-                            className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 transition-all placeholder:text-white/20 resize-none"
+                            className="w-full bg-white/5 border border-white/10 rounded-lg px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 transition-all placeholder:text-white/20 resize-none"
                           ></textarea>
                           
                           {intentionError && <p className="text-red-400 text-xs px-2">{intentionError}</p>}
@@ -526,7 +526,7 @@ export default function App() {
                           <button 
                             type="submit"
                             disabled={intentionSubmitting}
-                            className="w-full glass-panel py-4 rounded-2xl text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-accent-blue hover:text-pure-black transition-all flex items-center justify-center gap-2"
+                            className="w-full glass-panel py-4 rounded-lg text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-accent-blue hover:text-pure-black transition-all flex items-center justify-center gap-2"
                           >
                             {intentionSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Light a Virtual Candle</span>}
                           </button>
@@ -539,7 +539,7 @@ export default function App() {
                       <p className="text-pure-white/40 text-xs uppercase tracking-widest mb-6 px-4">Sign in to share your intention with our community</p>
                       <button 
                         onClick={() => setIsAuthModalOpen(true)}
-                        className="w-full glass-panel py-4 rounded-2xl text-[10px] uppercase tracking-[0.3em] font-bold bg-white/5 hover:bg-accent-blue hover:text-pure-black transition-all"
+                        className="w-full glass-panel py-4 rounded-lg text-[10px] uppercase tracking-[0.3em] font-bold bg-white/5 hover:bg-accent-blue hover:text-pure-black transition-all"
                       >
                         Sign In to Submit
                       </button>
@@ -567,9 +567,9 @@ export default function App() {
                       whileInView={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.1 }}
                       viewport={{ once: true }}
-                      className="glass-panel p-8 rounded-[28px] hover:bg-white/5 transition-all group"
+                      className="glass-panel p-8 rounded-xl hover:bg-white/5 transition-all group"
                     >
-                      <div className="specular-highlight rounded-[28px]" />
+                      <div className="specular-highlight rounded-xl" />
                       <div className="flex justify-between items-start mb-6">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 glass-panel rounded-full flex items-center justify-center text-accent-blue group-hover:scale-110 transition-transform">
@@ -619,7 +619,7 @@ export default function App() {
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.1 }}
                     viewport={{ once: true }}
-                    className="glass-panel p-6 rounded-2xl flex gap-6 items-start hover:bg-white/5 transition-colors"
+                    className="glass-panel p-6 rounded-lg flex gap-6 items-start hover:bg-white/5 transition-colors"
                   >
                     <div className="text-2xl font-serif text-accent-blue font-bold">{stone.year}</div>
                     <div>
@@ -636,19 +636,19 @@ export default function App() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                className="glass-panel p-3 rounded-[40px]"
+                className="glass-panel p-3 rounded-[28px]"
               >
-                <div className="specular-highlight rounded-[40px]" />
+                <div className="specular-highlight rounded-[28px]" />
                 <img 
                   src="https://images.unsplash.com/photo-1543002588-b974596e744f?w=1200&auto=format&fit=crop" 
                   alt="Cathedral Vaulted Ceiling" 
-                  className="rounded-[32px] w-full h-[600px] object-cover"
+                  className="rounded-2xl w-full h-[600px] object-cover"
                   referrerPolicy="no-referrer"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-pure-black/60 to-transparent rounded-[40px]" />
+                <div className="absolute inset-0 bg-gradient-to-t from-pure-black/60 to-transparent rounded-[28px]" />
                 
                 <div className="absolute bottom-10 left-10 right-10">
-                  <div className="glass-panel p-8 rounded-3xl backdrop-blur-2xl">
+                  <div className="glass-panel p-8 rounded-2xl backdrop-blur-2xl">
                     <h5 className="font-serif text-2xl mb-2 italic">Architecture of Light</h5>
                     <p className="text-xs text-white/60 leading-relaxed text-glow">
                       "The cathedral is a prayer written in stone and light, where 
@@ -683,15 +683,15 @@ export default function App() {
                   viewport={{ once: true }}
                   className="relative group break-inside-avoid"
                 >
-                  <div className="glass-panel p-2 rounded-[32px] overflow-hidden transition-all duration-500 group-hover:bg-white/10">
-                    <div className="specular-highlight rounded-[32px]" />
+                  <div className="glass-panel p-2 rounded-2xl overflow-hidden transition-all duration-500 group-hover:bg-white/10">
+                    <div className="specular-highlight rounded-2xl" />
                     <img 
                       src={event.image_url} 
                       alt={event.title}
-                      className="w-full rounded-[24px] object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="w-full rounded-xl object-cover transition-transform duration-700 group-hover:scale-105"
                       referrerPolicy="no-referrer"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-pure-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-[32px]" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-pure-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl" />
                     
                     <div className="absolute bottom-6 left-6 right-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
                       <p className="font-serif text-lg italic text-white/90">{event.title}</p>
@@ -727,12 +727,12 @@ export default function App() {
                     whileInView={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.1 }}
                     viewport={{ once: true }}
-                    className="glass-panel group p-1 rounded-[32px] hover:bg-white/5 transition-colors cursor-pointer"
+                    className="glass-panel group p-1 rounded-2xl hover:bg-white/5 transition-colors cursor-pointer"
                     onClick={() => setActiveVideoSermon(sermon)}
                   >
-                    <div className="specular-highlight rounded-[32px]" />
+                    <div className="specular-highlight rounded-2xl" />
                     <div className="flex flex-col md:flex-row gap-6 p-4">
-                      <div className="w-full md:w-48 h-32 rounded-2xl overflow-hidden relative border border-white/5 bg-white/5 flex items-center justify-center">
+                      <div className="w-full md:w-48 h-32 rounded-lg overflow-hidden relative border border-white/5 bg-white/5 flex items-center justify-center">
                         {sermon.thumbnail ? (
                           <>
                             <img src={sermon.thumbnail} alt={sermon.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" referrerPolicy="no-referrer" />
@@ -775,8 +775,8 @@ export default function App() {
           {/* Community Events */}
           {liveEvents.length > 0 && (
             <section id="events" className="lg:col-span-4">
-              <div className="glass-panel rounded-[40px] h-full p-10 flex flex-col relative overflow-hidden">
-                <div className="specular-highlight rounded-[40px]" />
+              <div className="glass-panel rounded-[28px] h-full p-10 flex flex-col relative overflow-hidden">
+                <div className="specular-highlight rounded-[28px]" />
                 
                 {/* Decorative Header Image */}
                 <div className="absolute top-0 right-0 w-32 h-32 -mr-8 -mt-8 opacity-20 pointer-events-none">
@@ -814,7 +814,7 @@ export default function App() {
                   ))}
                 </div>
 
-                <button className="mt-12 glass-panel w-full py-5 rounded-2xl text-xs uppercase tracking-[0.2em] font-bold hover:bg-white/10 transition-colors">
+                <button className="mt-12 glass-panel w-full py-5 rounded-lg text-xs uppercase tracking-[0.2em] font-bold hover:bg-white/10 transition-colors">
                   View All Events
                 </button>
               </div>
@@ -826,8 +826,8 @@ export default function App() {
 
         {/* Contact Section */}
         <section id="contact" className="max-w-7xl mx-auto px-8 mt-32">
-          <div className="glass-panel rounded-[48px] p-8 md:p-16 relative">
-            <div className="specular-highlight rounded-[48px]" />
+          <div className="glass-panel rounded-[32px] p-8 md:p-16 relative">
+            <div className="specular-highlight rounded-[32px]" />
             <div className="grid lg:grid-cols-2 gap-16">
               <div>
                 <motion.div
@@ -842,7 +842,7 @@ export default function App() {
                   
                   <div className="space-y-8">
                     <div className="flex gap-6 items-center">
-                      <div className="w-12 h-12 glass-panel rounded-2xl flex items-center justify-center text-accent-blue">
+                      <div className="w-12 h-12 glass-panel rounded-lg flex items-center justify-center text-accent-blue">
                         <MapPinIcon className="w-5 h-5" />
                       </div>
                       <div>
@@ -851,7 +851,7 @@ export default function App() {
                       </div>
                     </div>
                     <div className="flex gap-6 items-center">
-                      <div className="w-12 h-12 glass-panel rounded-2xl flex items-center justify-center text-accent-blue">
+                      <div className="w-12 h-12 glass-panel rounded-lg flex items-center justify-center text-accent-blue">
                         <PhoneIcon className="w-5 h-5" />
                       </div>
                       <div>
@@ -867,7 +867,7 @@ export default function App() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                className="glass-panel p-8 md:p-10 rounded-[32px] border-white/5 bg-white/[0.02]"
+                className="glass-panel p-8 md:p-10 rounded-2xl border-white/5 bg-white/[0.02]"
               >
                 {user ? (
                   <form className="space-y-6">
@@ -877,7 +877,7 @@ export default function App() {
                         <input 
                           type="text" 
                           placeholder="Saint John"
-                          className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 focus:bg-white/10 transition-all placeholder:text-pure-white/20"
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 focus:bg-white/10 transition-all placeholder:text-pure-white/20"
                         />
                       </div>
                       <div className="space-y-2">
@@ -885,13 +885,13 @@ export default function App() {
                         <input 
                           type="email" 
                           placeholder="john@cathedral.org"
-                          className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 focus:bg-white/10 transition-all placeholder:text-pure-white/20"
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 focus:bg-white/10 transition-all placeholder:text-pure-white/20"
                         />
                       </div>
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] uppercase tracking-[0.2em] text-accent-blue font-bold ml-1">Subject</label>
-                      <select className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 focus:bg-white/10 transition-all appearance-none text-pure-white/40">
+                      <select className="w-full bg-white/5 border border-white/10 rounded-lg px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 focus:bg-white/10 transition-all appearance-none text-pure-white/40">
                         <option className="bg-pure-black text-pure-white">General Inquiry</option>
                         <option className="bg-pure-black text-pure-white">Sacramental Request</option>
                         <option className="bg-pure-black text-pure-white">Prayer Intentions</option>
@@ -903,10 +903,10 @@ export default function App() {
                       <textarea 
                         rows={4}
                         placeholder="How may we walk with you today?"
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 focus:bg-white/10 transition-all placeholder:text-pure-white/20 resize-none"
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 focus:bg-white/10 transition-all placeholder:text-pure-white/20 resize-none"
                       ></textarea>
                     </div>
-                    <button className="w-full glass-panel py-5 rounded-2xl text-[11px] uppercase tracking-[0.3em] font-bold bg-white/10 hover:bg-accent-blue hover:text-pure-black transition-all active:scale-[0.98]">
+                    <button className="w-full glass-panel py-5 rounded-lg text-[11px] uppercase tracking-[0.3em] font-bold bg-white/10 hover:bg-accent-blue hover:text-pure-black transition-all active:scale-[0.98]">
                       Send Message
                     </button>
                   </form>
@@ -996,7 +996,7 @@ export default function App() {
                         setIsMenuOpen(false);
                       }}
                       aria-label="View Sanctuary Profile"
-                      className="w-full glass-panel p-4 rounded-2xl flex items-center gap-4 hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue"
+                      className="w-full glass-panel p-4 rounded-lg flex items-center gap-4 hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue"
                     >
                       <div className="w-12 h-12 rounded-full overflow-hidden glass-panel flex items-center justify-center">
                         {profile?.avatar_url ? (
@@ -1015,7 +1015,7 @@ export default function App() {
                         signOut();
                         setIsMenuOpen(false);
                       }}
-                      className="w-full glass-panel py-5 rounded-2xl text-[10px] uppercase tracking-widest font-bold hover:bg-red-500/10 hover:text-red-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 transition-all"
+                      className="w-full glass-panel py-5 rounded-lg text-[10px] uppercase tracking-widest font-bold hover:bg-red-500/10 hover:text-red-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 transition-all"
                     >
                       Log Out from Sanctuary
                     </button>
@@ -1026,7 +1026,7 @@ export default function App() {
                       setIsAuthModalOpen(true);
                       setIsMenuOpen(false);
                     }}
-                    className="w-full glass-panel py-6 rounded-3xl text-[12px] uppercase tracking-[0.3em] font-bold bg-accent-blue text-pure-black hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent-blue/50 transition-all"
+                    className="w-full glass-panel py-6 rounded-2xl text-[12px] uppercase tracking-[0.3em] font-bold bg-accent-blue text-pure-black hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent-blue/50 transition-all"
                   >
                     Enter the Sanctuary
                   </button>
@@ -1086,7 +1086,7 @@ export default function App() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="relative w-full max-w-5xl aspect-video glass-panel rounded-3xl overflow-hidden border border-white/10 shadow-2xl flex items-center justify-center bg-black"
+              className="relative w-full max-w-5xl aspect-video glass-panel rounded-2xl overflow-hidden border border-white/10 shadow-2xl flex items-center justify-center bg-black"
             >
               <button 
                 onClick={() => setActiveVideoSermon(null)}
@@ -1098,7 +1098,25 @@ export default function App() {
               {(!activeVideoSermon.video_type || activeVideoSermon.video_type === 'link') ? (
                 <iframe
                   className="w-full h-full"
-                  src={activeVideoSermon.video_url?.includes('watch?v=') ? activeVideoSermon.video_url.replace('watch?v=', 'embed/') : (activeVideoSermon.video_url || '')}
+                  src={(() => {
+                    const url = activeVideoSermon.video_url || '';
+                    try {
+                      if (url.includes('youtube.com/watch')) {
+                        const urlObj = new URL(url);
+                        const v = urlObj.searchParams.get('v');
+                        if (v) return `https://www.youtube.com/embed/${v}`;
+                      }
+                      if (url.includes('youtu.be/')) {
+                        const v = url.split('youtu.be/')[1]?.split('?')[0];
+                        if (v) return `https://www.youtube.com/embed/${v}`;
+                      }
+                      if (url.includes('vimeo.com/')) {
+                        const v = url.split('vimeo.com/')[1]?.split('?')[0];
+                        if (v) return `https://player.vimeo.com/video/${v}`;
+                      }
+                    } catch (e) {}
+                    return url.includes('watch?v=') ? url.replace('watch?v=', 'embed/') : url;
+                  })()}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                 ></iframe>
