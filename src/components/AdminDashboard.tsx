@@ -28,7 +28,7 @@ interface AdminDashboardProps {
   onClose: () => void;
 }
 
-type Tab = 'overview' | 'events' | 'sermons' | 'intentions' | 'profile';
+type Tab = 'overview' | 'events' | 'sermons' | 'intentions' | 'profile' | 'site_settings' | 'gallery';
 
 export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
   const { user, profile, isAdmin } = useAuth();
@@ -144,6 +144,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
         if (error) throw error;
       }
       setNewEvent({ title: '', date: '', description: '', category: 'Worship' });
+      fetchData();
     } catch (err: any) {
       console.error(err);
       alert('Event action failed: ' + err.message);
@@ -156,9 +157,12 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
     if (!supabase || !confirm('Are you certain you want to remove this event from the timeline?')) return;
     try {
       setLoading(true);
-      await supabase.from('events').delete().eq('id', id);
-    } catch (err) {
+      const { error } = await supabase.from('events').delete().eq('id', id);
+      if (error) throw error;
+      fetchData();
+    } catch (err: any) {
       console.error(err);
+      alert('Event deletion failed: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -186,6 +190,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
         if (error) throw error;
       }
       setNewSermon({ title: '', speaker: '', date: '', url: '', type: 'link' });
+      fetchData();
     } catch (err: any) {
       console.error(err);
       alert('Sermon archival failed: ' + err.message);
@@ -198,16 +203,69 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
     if (!supabase || !confirm('Delete this sermon record?')) return;
     try {
       setLoading(true);
-      await supabase.from('sermons').delete().eq('id', id);
-    } catch (err) {
+      const { error } = await supabase.from('sermons').delete().eq('id', id);
+      if (error) throw error;
+      fetchData();
+    } catch (err: any) {
       console.error(err);
+      alert('Sermon deletion failed: ' + err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // State to hold draft responses
-  const [intentionResponses, setIntentionResponses] = useState<Record<string, string>>({});
+  // State for Site Settings and Gallery
+  const [siteSettings, setSiteSettings] = useState({ heroImageUrl: '', historyImageUrl: '' });
+  const [newGalleryItem, setNewGalleryItem] = useState({ description: '', date: '', time: '', file: null as File | null });
+
+  const handleUpdateSiteSettings = async (type: 'hero' | 'history', file: File | null, url: string) => {
+    if (!supabase) return;
+    try {
+      setLoading(true);
+      let imageUrl = url;
+      if (file) {
+        const { data, error } = await supabase.storage.from('site-assets').upload(`${type}_${Date.now()}`, file);
+        if (error) throw error;
+        imageUrl = data.path;
+      }
+      const { error } = await supabase.from('site_settings').update({ [`${type}_image_url`]: imageUrl }).eq('id', 1);
+      if (error) throw error;
+      alert(`Updated ${type} image successfully.`);
+      fetchData();
+    } catch (err: any) {
+      console.error(err);
+      alert(`Failed to update ${type}: ` + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUploadGalleryItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supabase || !newGalleryItem.file) return;
+    try {
+      setLoading(true);
+      const { data, error: uploadError } = await supabase.storage.from('gallery-images').upload(`gallery_${Date.now()}`, newGalleryItem.file);
+      if (uploadError) throw uploadError;
+      
+      const { error: insertError } = await supabase.from('gallery').insert([{
+        description: newGalleryItem.description,
+        date: newGalleryItem.date,
+        time: newGalleryItem.time,
+        image_url: data.path
+      }]);
+      if (insertError) throw insertError;
+      
+      setNewGalleryItem({ description: '', date: '', time: '', file: null });
+      alert('Gallery item uploaded successfully.');
+      fetchData();
+    } catch (err: any) {
+      console.error(err);
+      alert('Gallery upload failed: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleRespondIntention = async (id: string) => {
     if (!supabase) return;
@@ -260,9 +318,9 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
       <motion.div 
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="glass-panel w-full h-full max-w-7xl rounded-none md:rounded-[32px] relative z-10 flex flex-col md:flex-row overflow-hidden shadow-2xl border-white/5"
+        className="glass-panel w-full h-full max-w-7xl rounded-md relative z-10 flex flex-col md:flex-row overflow-hidden shadow-2xl border-white/5"
       >
-        <div className="specular-highlight rounded-[32px]" />
+        <div className="specular-highlight rounded-md" />
 
         {!isAuthenticated ? (
           <div className="flex-1 flex items-center justify-center p-8">
@@ -310,9 +368,11 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
               <nav className="space-y-1">
                 {[
                   { id: 'overview', icon: BarChart3, label: 'Overview' },
-                  { id: 'events', icon: Calendar, label: 'Events & Gallery' },
+                  { id: 'events', icon: Calendar, label: 'Events' },
                   { id: 'sermons', icon: Video, label: 'Sermons' },
                   { id: 'intentions', icon: MessageSquare, label: 'Intentions' },
+                  { id: 'site_settings', icon: Edit, label: 'Hero & History' },
+                  { id: 'gallery', icon: ImageIcon, label: 'Event Gallery' },
                   { id: 'profile', icon: User, label: 'Admin Profile' },
                 ].map((item) => (
                   <button
@@ -403,8 +463,8 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                     {activeTab === 'events' && (
                       <div className="space-y-8">
                          {/* Create Event Form */}
-                         <form onSubmit={handleCreateEvent} className="glass-panel p-8 rounded-2xl border-accent-blue/10 bg-accent-blue/5">
-                            <h4 className="text-lg font-serif mb-6">{(newEvent as any).id ? 'Edit Liturgical Event' : 'Create New Liturgical Event'}</h4>
+                         <form onSubmit={handleCreateEvent} className="glass-panel p-8 rounded-lg border-accent-blue/10 bg-accent-blue/5">
+                            <h4 className="text-lg font-serif mb-6">Edit Liturgical Event</h4>
                              <div className="grid md:grid-cols-2 gap-6">
                                <div className="space-y-3">
                                   <label className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Event Title</label>
@@ -493,8 +553,8 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
 
                     {activeTab === 'sermons' && (
                       <div className="space-y-8">
-                         <form onSubmit={handleCreateSermon} className="glass-panel p-8 rounded-2xl border-accent-blue/10 bg-accent-blue/5">
-                            <h4 className="text-lg font-serif mb-6">{(newSermon as any).id ? 'Edit Sermon Record' : 'Upload New Sermon'}</h4>
+                         <form onSubmit={handleCreateSermon} className="glass-panel p-8 rounded-lg border-accent-blue/10 bg-accent-blue/5">
+                            <h4 className="text-lg font-serif mb-6">Edit Sermon Record</h4>
                             <div className="grid md:grid-cols-2 gap-6">
                                <div className="space-y-3 md:col-span-2">
                                   <label className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Video Title</label>
@@ -692,6 +752,36 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                         ))}
                         {intentions.length === 0 && <p className="text-center text-white/40 py-8 italic">No prayer intentions submitted.</p>}
                       </div>
+                    )}
+
+                    {activeTab === 'site_settings' && (
+                      <div className="glass-panel p-8 rounded-lg space-y-8">
+                        <h4 className="text-lg font-serif">Hero Section & History Image</h4>
+                        <div className="grid md:grid-cols-2 gap-8">
+                            <div className="space-y-3">
+                                <label className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Hero Image</label>
+                                <input type="file" onChange={(e) => handleUpdateSiteSettings('hero', e.target.files?.[0] || null, '')} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" />
+                            </div>
+                            <div className="space-y-3">
+                                <label className="text-[9px] uppercase tracking-widest text-white/40 font-bold">History Image</label>
+                                <input type="file" onChange={(e) => handleUpdateSiteSettings('history', e.target.files?.[0] || null, '')} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" />
+                            </div>
+                        </div>
+                      </div>
+                    )}
+                    {activeTab === 'gallery' && (
+                      <form onSubmit={handleUploadGalleryItem} className="glass-panel p-8 rounded-lg space-y-8">
+                        <h4 className="text-lg font-serif">Event Gallery</h4>
+                        <div className="grid md:grid-cols-3 gap-4">
+                           <input type="text" value={newGalleryItem.description} onChange={e => setNewGalleryItem({...newGalleryItem, description: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" placeholder="Description" required />
+                           <input type="date" value={newGalleryItem.date} onChange={e => setNewGalleryItem({...newGalleryItem, date: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" required />
+                           <input type="time" value={newGalleryItem.time} onChange={e => setNewGalleryItem({...newGalleryItem, time: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" required />
+                           <input type="file" onChange={e => setNewGalleryItem({...newGalleryItem, file: e.target.files?.[0] || null})} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" required />
+                        </div>
+                         <button type="submit" disabled={loading} className="glass-panel w-full py-4 rounded-md text-[10px] uppercase font-bold hover:bg-white/10 transition-colors disabled:opacity-50">
+                             {loading ? 'Uploading...' : 'Upload Event Image'}
+                         </button>
+                      </form>
                     )}
 
                     {activeTab === 'profile' && (
