@@ -19,7 +19,9 @@ import {
   Bell,
   Image as ImageIcon,
   Loader2,
-  Edit
+  Edit,
+  Briefcase,
+  Music
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -29,7 +31,7 @@ interface AdminDashboardProps {
   onClose: () => void;
 }
 
-type Tab = 'overview' | 'events' | 'sermons' | 'intentions' | 'profile' | 'site_settings' | 'gallery';
+type Tab = 'overview' | 'events' | 'sermons' | 'intentions' | 'profile' | 'site_settings' | 'gallery' | 'projects' | 'choir';
 
 export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
   const { user, profile, isAdmin } = useAuth();
@@ -103,6 +105,10 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
     };
   }, [isAuthenticated, isOpen, activeTab]);
 
+  const [gallery, setGallery] = useState<any[]>([]);
+
+  // ...
+
   async function fetchData() {
     setLoading(true);
     try {
@@ -116,6 +122,9 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
       } else if (activeTab === 'intentions') {
         const { data } = await supabase.from('intentions').select('*, profiles(full_name, email)').order('created_at', { ascending: false });
         setIntentions(data || []);
+      } else if (activeTab === 'gallery') {
+          const { data } = await supabase.from('gallery').select('*').order('created_at', { ascending: false });
+          setGallery(data || []);
       }
     } catch (err) {
       console.error(err);
@@ -219,24 +228,73 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
   const [siteSettings, setSiteSettings] = useState({ heroFile: null as File | null, heroUrl: '', historyFile: null as File | null, historyUrl: '' });
   const [newGalleryItem, setNewGalleryItem] = useState({ description: '', date: '', time: '', file: null as File | null, url: '' });
 
-  const handleUpdateSiteSettings = async (type: 'hero' | 'history', file: File | null, url: string) => {
+  const handleUpdateHero = async () => {
     if (!supabase) return;
     try {
       setLoading(true);
-      let imageUrl = url;
-      if (file) {
-        const { data, error } = await supabase.storage.from('site-assets').upload(`site_assets/${type}_${Date.now()}`, file);
+      let imageUrl = siteSettings.heroUrl;
+      if (siteSettings.heroFile) {
+        const { data, error } = await supabase.storage.from('site-assets').upload(`site_assets/hero_${Date.now()}`, siteSettings.heroFile);
         if (error) throw error;
         const { data: publicURLData } = supabase.storage.from('site-assets').getPublicUrl(data.path);
         imageUrl = publicURLData.publicUrl;
       }
-      const { error } = await supabase.from('site_settings').update({ [`${type}_image_url`]: imageUrl }).eq('id', 1);
+      const { data: currentSettings } = await supabase.from('site_settings').select('*').eq('id', 1).single();
+      const { error } = await supabase.from('site_settings').upsert({ 
+          id: 1, 
+          hero_image_url: imageUrl,
+          history_image_url: currentSettings?.history_image_url 
+      }, { onConflict: 'id' });
       if (error) throw error;
-      toast.success(`Updated ${type} image successfully.`);
+      toast.success("Updated hero image successfully.");
       fetchData();
     } catch (err: any) {
       console.error(err);
-      toast.error(`Failed to update ${type}: ` + err.message);
+      toast.error("Failed to update hero: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateHistory = async () => {
+    if (!supabase) return;
+    try {
+      setLoading(true);
+      let imageUrl = siteSettings.historyUrl;
+      if (siteSettings.historyFile) {
+        const { data, error } = await supabase.storage.from('site-assets').upload(`site_assets/history_${Date.now()}`, siteSettings.historyFile);
+        if (error) throw error;
+        const { data: publicURLData } = supabase.storage.from('site-assets').getPublicUrl(data.path);
+        imageUrl = publicURLData.publicUrl;
+      }
+      const { data: currentSettings } = await supabase.from('site_settings').select('*').eq('id', 1).single();
+      const { error } = await supabase.from('site_settings').upsert({ 
+          id: 1, 
+          history_image_url: imageUrl,
+          hero_image_url: currentSettings?.hero_image_url 
+      }, { onConflict: 'id' });
+      if (error) throw error;
+      toast.success("Updated history image successfully.");
+      fetchData();
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Failed to update history: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteGalleryItem = async (id: string) => {
+    if (!supabase || !confirm('Are you sure you want to delete this gallery item?')) return;
+    try {
+      setLoading(true);
+      const { error } = await supabase.from('gallery').delete().eq('id', id);
+      if (error) throw error;
+      toast.success('Gallery item deleted successfully.');
+      fetchData();
+    } catch (err: any) {
+      console.error(err);
+      toast.error('Gallery item deletion failed: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -383,6 +441,8 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                   { id: 'intentions', icon: MessageSquare, label: 'Intentions' },
                   { id: 'site_settings', icon: Edit, label: 'Hero & History' },
                   { id: 'gallery', icon: ImageIcon, label: 'Event Gallery' },
+                  { id: 'projects', icon: Briefcase, label: 'Projects' },
+                  { id: 'choir', icon: Music, label: 'Choir Settings' },
                   { id: 'profile', icon: User, label: 'Admin Profile' },
                 ].map((item) => (
                   <button
@@ -767,33 +827,71 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                                 <label className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Hero Image</label>
                                 <input type="file" onChange={(e) => setSiteSettings(prev => ({...prev, heroFile: e.target.files?.[0] || null}))} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" />
                                 <input type="text" onChange={(e) => setSiteSettings(prev => ({...prev, heroUrl: e.target.value}))} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" placeholder="OR Enter Image URL" />
-                                <button onClick={() => handleUpdateSiteSettings('hero', siteSettings.heroFile, siteSettings.heroUrl)} disabled={loading} className="glass-panel w-full py-3 rounded-md text-[10px] uppercase font-bold hover:bg-white/10 transition-colors disabled:opacity-50">Save Hero</button>
+                                <button onClick={handleUpdateHero} disabled={loading} className="glass-panel w-full py-3 rounded-md text-[10px] uppercase font-bold hover:bg-white/10 transition-colors disabled:opacity-50">Save Hero</button>
                             </div>
                             <div className="space-y-4">
                                 <label className="text-[9px] uppercase tracking-widest text-white/40 font-bold">History Image</label>
                                 <input type="file" onChange={(e) => setSiteSettings(prev => ({...prev, historyFile: e.target.files?.[0] || null}))} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" />
                                 <input type="text" onChange={(e) => setSiteSettings(prev => ({...prev, historyUrl: e.target.value}))} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" placeholder="OR Enter Image URL" />
-                                <button onClick={() => handleUpdateSiteSettings('history', siteSettings.historyFile, siteSettings.historyUrl)} disabled={loading} className="glass-panel w-full py-3 rounded-md text-[10px] uppercase font-bold hover:bg-white/10 transition-colors disabled:opacity-50">Save History</button>
+                                <button onClick={handleUpdateHistory} disabled={loading} className="glass-panel w-full py-3 rounded-md text-[10px] uppercase font-bold hover:bg-white/10 transition-colors disabled:opacity-50">Save History</button>
                             </div>
                         </div>
                       </div>
                     )}
                     {activeTab === 'gallery' && (
-                      <form onSubmit={handleUploadGalleryItem} className="glass-panel p-8 rounded-lg space-y-8">
-                        <h4 className="text-lg font-serif">Event Gallery</h4>
-                        <div className="grid md:grid-cols-2 gap-4">
-                           <input type="text" value={newGalleryItem.description} onChange={e => setNewGalleryItem({...newGalleryItem, description: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" placeholder="Description" required />
-                           <input type="date" value={newGalleryItem.date} onChange={e => setNewGalleryItem({...newGalleryItem, date: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" required />
-                           <input type="time" value={newGalleryItem.time} onChange={e => setNewGalleryItem({...newGalleryItem, time: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" required />
-                           <input type="file" onChange={e => setNewGalleryItem({...newGalleryItem, file: e.target.files?.[0] || null})} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" />
-                           <input type="text" value={newGalleryItem.url} onChange={e => setNewGalleryItem({...newGalleryItem, url: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" placeholder="OR Image URL" />
+                        <div className="space-y-8">
+                            <form onSubmit={handleUploadGalleryItem} className="glass-panel p-8 rounded-lg space-y-8">
+                                <h4 className="text-lg font-serif">Upload New Gallery Item</h4>
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <input type="text" value={newGalleryItem.description} onChange={e => setNewGalleryItem({...newGalleryItem, description: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" placeholder="Description" required />
+                                    <input type="date" value={newGalleryItem.date} onChange={e => setNewGalleryItem({...newGalleryItem, date: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" required />
+                                    <input type="time" value={newGalleryItem.time} onChange={e => setNewGalleryItem({...newGalleryItem, time: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" required />
+                                    <input type="file" onChange={e => setNewGalleryItem({...newGalleryItem, file: e.target.files?.[0] || null})} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" />
+                                    <input type="text" value={newGalleryItem.url} onChange={e => setNewGalleryItem({...newGalleryItem, url: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" placeholder="OR Image URL" />
+                                </div>
+                                <button type="submit" disabled={loading} className="glass-panel w-full py-4 rounded-md text-[10px] uppercase font-bold hover:bg-white/10 transition-colors disabled:opacity-50">
+                                    {loading ? 'Uploading...' : 'Upload Event Image'}
+                                </button>
+                            </form>
+
+                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {gallery.map(item => (
+                                    <div key={item.id} className="glass-panel p-4 rounded-lg group relative">
+                                        <img src={item.image_url} alt={item.description} className="w-full h-40 object-cover rounded mb-4" />
+                                        <p className="text-xs font-serif mb-4">{item.description}</p>
+                                        <button onClick={() => handleDeleteGalleryItem(item.id)} className="absolute top-6 right-6 p-2 bg-red-500/10 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors">
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                         <button type="submit" disabled={loading} className="glass-panel w-full py-4 rounded-md text-[10px] uppercase font-bold hover:bg-white/10 transition-colors disabled:opacity-50">
-                             {loading ? 'Uploading...' : 'Upload Event Image'}
-                         </button>
-                      </form>
                     )}
 
+                    {activeTab === 'projects' && (
+                        <div className="space-y-8">
+                            <form onSubmit={handleUploadGalleryItem} className="glass-panel p-8 rounded-lg space-y-8">
+                                <h4 className="text-lg font-serif">Add New Project</h4>
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <input type="text" className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" placeholder="Project Name" />
+                                    <input type="text" className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" placeholder="Description" />
+                                    <input type="text" className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-xs" placeholder="Image URL" />
+                                </div>
+                                <button type="submit" disabled={loading} className="glass-panel w-full py-4 rounded-md text-[10px] uppercase font-bold hover:bg-white/10 transition-colors disabled:opacity-50">
+                                    Publish Project
+                                </button>
+                            </form>
+                            <div className="p-8 glass-panel rounded-lg text-center">
+                                <p className="text-white/40">Projects listing will appear here.</p>
+                            </div>
+                        </div>
+                    )}
+                    {activeTab === 'choir' && (
+                        <div className="p-8 glass-panel rounded-lg text-center">
+                            <h4 className="text-lg font-serif mb-4">Choir Settings</h4>
+                            <p className="text-white/40">Choir Management module is currently under development.</p>
+                        </div>
+                    )}
                     {activeTab === 'profile' && (
                        <div className="max-w-2xl mx-auto py-12 text-center">
                           <h4 className="text-2xl font-serif mb-8">Administrator Privileges</h4>

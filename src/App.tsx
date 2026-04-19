@@ -4,6 +4,7 @@
  */
 
 import { motion, AnimatePresence, useScroll, useSpring, useTransform } from 'motion/react';
+import { toast } from 'sonner';
 import { 
   Heart, 
   MessageSquare,
@@ -29,6 +30,9 @@ import { AuthModal } from './components/AuthModal';
 import { UserProfile } from './components/UserProfile';
 import { AdminDashboard } from './components/AdminDashboard';
 import { Logo } from './components/Logo';
+import { Footer } from './components/Footer';
+import { Projects } from './components/Projects';
+import { Choir } from './components/Choir';
 import { User as UserIcon } from 'lucide-react';
 
 const MASS_TIMES = [
@@ -187,12 +191,12 @@ export default function App() {
         }
       ]);
       if (error) throw error;
-      setIntentionSuccess(true);
+      toast.success('Your intention has been submitted with faith.');
       setIntentionMessage('');
-      setTimeout(() => setIntentionSuccess(false), 5000);
+      setIntentionSuccess(false);
     } catch (err: any) {
       console.error(err);
-      setIntentionError(err.message || 'Failed to submit intention. Please try again.');
+      toast.error(err.message || 'Failed to submit intention. Please try again.');
     } finally {
       setIntentionSubmitting(false);
     }
@@ -1144,6 +1148,13 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
+      <section id="projects" className="py-24 max-w-7xl mx-auto px-8">
+        <Projects />
+      </section>
+      <section id="choir" className="py-24 max-w-7xl mx-auto px-8 bg-white/[0.02]">
+        <Choir />
+      </section>
+      <Footer />
     </div>
   );
 }

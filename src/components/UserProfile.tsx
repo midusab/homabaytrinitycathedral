@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { toast } from 'sonner';
 import { 
   X as XIcon, 
   Camera as CameraIcon, 
@@ -52,12 +53,14 @@ export function UserProfile({ isOpen, onClose, onOpenAdmin }: UserProfileProps) 
     const subscription = supabase
       .channel('my-intentions-realtime')
       .on('postgres_changes', { 
-        event: '*', 
+        event: 'UPDATE', 
         schema: 'public', 
         table: 'intentions',
         filter: `user_id=eq.${user.id}`
-      }, () => {
-        // Just re-fetch the profile data which includes the intention list
+      }, (payload: any) => {
+        if (payload.new.status === 'responded' && payload.old.status !== 'responded') {
+          toast.success('Your intention has been addressed with a response.');
+        }
         fetchProfile();
       })
       .subscribe();
