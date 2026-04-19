@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Mail, Lock, User as UserIcon, Loader2 } from 'lucide-react';
+import { 
+  X as XIcon, 
+  Mail as MailIcon, 
+  Lock as LockIcon, 
+  User as UserIcon, 
+  Loader2 as Loader2Icon 
+} from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface AuthModalProps {
@@ -32,6 +38,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           password,
           options: {
             data: { full_name: fullName },
+            emailRedirectTo: window.location.origin,
           },
         });
         if (error) throw error;
@@ -74,7 +81,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               onClick={onClose}
               className="absolute top-6 right-6 text-pure-white/40 hover:text-pure-white transition-colors"
             >
-              <X className="w-6 h-6" />
+              <XIcon className="w-6 h-6" />
             </button>
 
             <div className="text-center mb-10">
@@ -89,7 +96,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             {success ? (
               <div className="text-center py-8">
                 <div className="w-16 h-16 bg-accent-blue/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Mail className="w-8 h-8 text-accent-blue" />
+                  <MailIcon className="w-8 h-8 text-accent-blue" />
                 </div>
                 <h3 className="text-xl font-serif mb-4">Check your email</h3>
                 <p className="text-pure-white/50 text-sm leading-relaxed mb-8">
@@ -130,7 +137,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase tracking-[0.2em] text-accent-blue font-bold ml-1">Email Address</label>
                   <div className="relative">
-                    <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-pure-white/20" />
+                    <MailIcon className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-pure-white/20" />
                     <input
                       required
                       type="email"
@@ -145,7 +152,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase tracking-[0.2em] text-accent-blue font-bold ml-1">Password</label>
                   <div className="relative">
-                    <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-pure-white/20" />
+                    <LockIcon className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-pure-white/20" />
                     <input
                       required
                       type="password"
@@ -163,7 +170,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   className="w-full glass-panel py-5 rounded-2xl text-[11px] uppercase tracking-[0.3em] font-bold bg-white/10 hover:bg-accent-blue hover:text-pure-black transition-all flex items-center justify-center gap-2"
                 >
                   {loading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2Icon className="w-4 h-4 animate-spin" />
                   ) : (
                     isSignUp ? 'Create Account' : 'Sign In'
                   )}

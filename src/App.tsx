@@ -7,22 +7,26 @@ import { motion, AnimatePresence, useScroll, useSpring, useTransform } from 'mot
 import { 
   Heart, 
   MessageSquare,
-  Cross, 
-  MapPin, 
-  Phone, 
-  Calendar, 
+  Cross as CrossIcon, 
+  MapPin as MapPinIcon, 
+  Phone as PhoneIcon, 
+  Calendar as CalendarIcon, 
   Menu as MenuIcon, 
-  X,
-  ChevronRight,
-  Play,
-  Share2,
-  Bookmark,
-  Sparkles,
-  Search
+  X as XIcon,
+  ChevronRight as ChevronRightIcon,
+  Play as PlayIcon,
+  Share2 as Share2Icon,
+  Bookmark as BookmarkIcon,
+  Sparkles as SparklesIcon,
+  Search as SearchIcon,
+  Lock as LockIcon
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import { AuthModal } from './components/AuthModal';
+import { UserProfile } from './components/UserProfile';
+import { Logo } from './components/Logo';
+import { User as UserIcon } from 'lucide-react';
 
 const SERMONS = [
   { 
@@ -112,7 +116,8 @@ const PRAYER_INTENTIONS = [
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const { user, profile, signOut } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
@@ -125,6 +130,7 @@ export default function App() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
   const heroScale = useTransform(scrollYProgress, [0, 0.3], [1, 1.1]);
   const heroBlur = useTransform(scrollYProgress, [0, 0.3], [0, 10]);
+  const heroFilter = useTransform(heroBlur, (v) => `blur(${v}px)`);
 
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
@@ -163,8 +169,8 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-8 flex justify-between items-center">
           <div className="glass-panel px-6 py-2 rounded-full flex items-center gap-3">
             <div className="specular-highlight rounded-full" />
-            <Cross className="w-5 h-5 text-accent-blue" />
-            <span className="font-serif text-xl tracking-tight text-pure-white/90">Trinity Cathedral</span>
+            <Logo size={24} />
+            <span className="font-serif text-xl tracking-tight text-pure-white/90">Trinity</span>
           </div>
 
           <div className="hidden lg:flex items-center gap-2">
@@ -181,16 +187,31 @@ export default function App() {
               ))}
             </div>
             <button className="glass-panel w-12 h-12 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors">
-              <Search className="w-4 h-4 text-white/70" />
+              <SearchIcon className="w-4 h-4 text-white/70" />
             </button>
             
             {user ? (
-              <button 
-                onClick={() => signOut()}
-                className="glass-panel px-6 py-3 rounded-full text-[10px] uppercase tracking-widest font-bold hover:bg-white/10 transition-colors"
-              >
-                Log Out
-              </button>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setIsProfileOpen(true)}
+                  className="glass-panel p-1 pr-6 rounded-full text-[10px] uppercase tracking-widest font-bold hover:bg-white/10 transition-colors flex items-center gap-3"
+                >
+                  <div className="w-10 h-10 rounded-full overflow-hidden glass-panel border border-white/10 flex items-center justify-center">
+                    {profile?.avatar_url ? (
+                      <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <UserIcon className="w-4 h-4 text-accent-blue" />
+                    )}
+                  </div>
+                  Profile
+                </button>
+                <button 
+                  onClick={() => signOut()}
+                  className="glass-panel px-6 py-3 rounded-full text-[10px] uppercase tracking-widest font-bold hover:bg-white/10 transition-colors"
+                >
+                  Log Out
+                </button>
+              </div>
             ) : (
               <button 
                 onClick={() => setIsAuthModalOpen(true)}
@@ -205,7 +226,7 @@ export default function App() {
             className="lg:hidden glass-panel w-12 h-12 rounded-full flex items-center justify-center"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
-            {isMenuOpen ? <X className="w-5 h-5" /> : <MenuIcon className="w-5 h-5" />}
+            {isMenuOpen ? <XIcon className="w-5 h-5" /> : <MenuIcon className="w-5 h-5" />}
           </button>
         </div>
       </nav>
@@ -215,7 +236,7 @@ export default function App() {
         <section className="relative max-w-7xl mx-auto px-8 mb-32 group">
           {/* Background Highlight */}
           <motion.div 
-            style={{ y: heroY, opacity: heroOpacity, scale: heroScale, filter: `blur(${heroBlur}px)` }}
+            style={{ y: heroY, opacity: heroOpacity, scale: heroScale, filter: heroFilter }}
             className="absolute inset-0 -mx-8 lg:-mx-24 -z-10 overflow-hidden rounded-[64px]"
           >
             <div className="absolute inset-0 bg-pure-black/60 backdrop-blur-[2px] z-10" />
@@ -254,12 +275,12 @@ export default function App() {
                     <div className="absolute inset-0 bg-gradient-to-r from-accent-blue/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div className="relative z-10 flex items-center gap-4">
                       <span>Enter the Sanctuary</span>
-                      <ChevronRight className="w-5 h-5 text-accent-blue group-hover:translate-x-1 transition-transform" />
+                      <ChevronRightIcon className="w-5 h-5 text-accent-blue group-hover:translate-x-1 transition-transform" />
                     </div>
                   </button>
                   <button className="flex items-center gap-6 group">
                     <div className="glass-panel w-16 h-16 rounded-full flex items-center justify-center group-hover:bg-accent-blue transition-all duration-500 shadow-xl shadow-accent-blue/10">
-                      <Play className="w-6 h-6 fill-current group-hover:scale-110 transition-transform" />
+                      <PlayIcon className="w-6 h-6 fill-current group-hover:scale-110 transition-transform" />
                     </div>
                     <span className="text-xs uppercase tracking-[0.3em] font-bold opacity-60 group-hover:opacity-100 transition-opacity">Watch Latest Mass</span>
                   </button>
@@ -292,7 +313,7 @@ export default function App() {
                 {/* Decorative Elements */}
                 <div className="absolute -bottom-6 -left-6 glass-panel p-4 rounded-2xl flex items-center gap-3 backdrop-blur-xl border-white/20">
                   <div className="w-10 h-10 rounded-full bg-accent-blue/20 flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-accent-blue" />
+                    <SparklesIcon className="w-5 h-5 text-accent-blue" />
                   </div>
                   <div className="pr-4">
                     <p className="text-[10px] uppercase tracking-widest font-bold opacity-40">Next Choral Mass</p>
@@ -308,7 +329,7 @@ export default function App() {
         <section id="liturgies" className="relative max-w-7xl mx-auto px-8 mb-32 overflow-hidden py-12">
           {/* Subtle Background Visual */}
           <div className="absolute inset-0 -z-10 opacity-[0.03] scale-150 rotate-12">
-            <Cross className="w-full h-full text-white" strokeWidth={0.5} />
+            <CrossIcon className="w-full h-full text-white" strokeWidth={0.5} />
           </div>
 
           <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
@@ -352,14 +373,14 @@ export default function App() {
                 <div className="specular-highlight rounded-[28px]" />
                 <div className="text-accent-blue mb-4 flex justify-center">
                   <div className="w-10 h-10 glass-panel rounded-full flex items-center justify-center">
-                    <Sparkles className="w-4 h-4 opacity-70" />
+                    <SparklesIcon className="w-4 h-4 opacity-70" />
                   </div>
                 </div>
                 <h3 className="text-[10px] font-sans uppercase tracking-[0.3em] font-bold text-white/40 mb-3">{mass.day}</h3>
                 <div className="text-2xl font-serif mb-1">{mass.time}</div>
                 <div className="text-[11px] italic text-accent-blue mb-6">{mass.type}</div>
                 <div className="flex items-center justify-center gap-2 text-white/30 text-[10px] uppercase tracking-wider mt-auto pt-4 border-t border-white/5 font-medium">
-                  <MapPin className="w-3 h-3" />
+                  <MapPinIcon className="w-3 h-3" />
                   {mass.location}
                 </div>
               </motion.div>
@@ -441,7 +462,7 @@ export default function App() {
                     </form>
                   ) : (
                     <div className="py-8 text-center">
-                      <Lock className="w-10 h-10 text-accent-blue/20 mx-auto mb-4" />
+                      <LockIcon className="w-10 h-10 text-accent-blue/20 mx-auto mb-4" />
                       <p className="text-pure-white/40 text-xs uppercase tracking-widest mb-6 px-4">Sign in to share your intention with our community</p>
                       <button 
                         onClick={() => setIsAuthModalOpen(true)}
@@ -616,7 +637,7 @@ export default function App() {
                 <p className="text-sm text-pure-white/40 font-sans tracking-wide">Exploring the Gospel in a contemporary world.</p>
               </div>
               <button className="text-xs uppercase tracking-tighter text-accent-blue font-bold flex items-center gap-2 hover:translate-x-1 transition-transform">
-                Archive <ChevronRight className="w-4 h-4" />
+                Archive <ChevronRightIcon className="w-4 h-4" />
               </button>
             </div>
 
@@ -645,8 +666,8 @@ export default function App() {
                       <div className="flex items-center justify-between mt-4">
                         <span className="text-[10px] font-sans text-pure-white/30 uppercase tracking-widest">{sermon.date}</span>
                         <div className="flex gap-4">
-                          <button className="text-pure-white/30 hover:text-pure-white transition-colors"><Bookmark className="w-4 h-4" /></button>
-                          <button className="text-pure-white/30 hover:text-pure-white transition-colors"><Share2 className="w-4 h-4" /></button>
+                          <button className="text-pure-white/30 hover:text-pure-white transition-colors"><BookmarkIcon className="w-4 h-4" /></button>
+                          <button className="text-pure-white/30 hover:text-pure-white transition-colors"><Share2Icon className="w-4 h-4" /></button>
                         </div>
                       </div>
                     </div>
@@ -672,7 +693,7 @@ export default function App() {
               </div>
 
               <div className="flex items-center gap-4 mb-12 relative z-10">
-                <Sparkles className="w-6 h-6 text-accent-blue" />
+                <SparklesIcon className="w-6 h-6 text-accent-blue" />
                 <h2 className="text-3xl font-serif">Communion</h2>
               </div>
 
@@ -725,7 +746,7 @@ export default function App() {
                   <div className="space-y-8">
                     <div className="flex gap-6 items-center">
                       <div className="w-12 h-12 glass-panel rounded-2xl flex items-center justify-center text-accent-blue">
-                        <MapPin className="w-5 h-5" />
+                        <MapPinIcon className="w-5 h-5" />
                       </div>
                       <div>
                         <p className="text-[10px] uppercase tracking-widest text-pure-white/30 font-bold mb-1">Our Location</p>
@@ -734,7 +755,7 @@ export default function App() {
                     </div>
                     <div className="flex gap-6 items-center">
                       <div className="w-12 h-12 glass-panel rounded-2xl flex items-center justify-center text-accent-blue">
-                        <Phone className="w-5 h-5" />
+                        <PhoneIcon className="w-5 h-5" />
                       </div>
                       <div>
                         <p className="text-[10px] uppercase tracking-widest text-pure-white/30 font-bold mb-1">Rectory Office</p>
@@ -794,7 +815,7 @@ export default function App() {
                   </form>
                 ) : (
                   <div className="py-20 text-center">
-                    <Lock className="w-12 h-12 text-accent-blue/20 mx-auto mb-6" />
+                    <LockIcon className="w-12 h-12 text-accent-blue/20 mx-auto mb-6" />
                     <h3 className="text-2xl font-serif mb-4">Secure Outreach</h3>
                     <p className="text-pure-white/40 text-sm uppercase tracking-widest mb-10 max-w-sm mx-auto">Please sign in to your cathedral account to send a secure message to the rectory</p>
                     <button 
@@ -818,8 +839,92 @@ export default function App() {
         onClose={() => setIsAuthModalOpen(false)} 
       />
 
+      {/* User Profile Overlay */}
+      <UserProfile 
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+      />
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: '100%' }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: '100%' }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="fixed inset-0 z-[60] lg:hidden"
+          >
+            <div className="absolute inset-0 bg-pure-black/95 backdrop-blur-2xl p-12 flex flex-col pt-32">
+              <div className="liquid-blob w-[400px] h-[400px] bg-premium-blue/10 top-[-100px] right-[-100px] animate-blob-float" />
+              
+              <div className="space-y-8 mb-12">
+                {['Sermons', 'Events', 'Liturgies', 'Gallery', 'Prayer', 'History', 'Contact'].map((item, i) => (
+                  <motion.a 
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    key={item} 
+                    href={`#${item.toLowerCase()}`}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block text-4xl font-serif text-white/90 hover:text-accent-blue transition-colors italic"
+                  >
+                    {item}
+                  </motion.a>
+                ))}
+              </div>
+
+              <div className="mt-auto space-y-6">
+                {user ? (
+                  <>
+                    <button 
+                      onClick={() => {
+                        setIsProfileOpen(true);
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full glass-panel p-4 rounded-2xl flex items-center gap-4"
+                    >
+                      <div className="w-12 h-12 rounded-full overflow-hidden glass-panel flex items-center justify-center">
+                        {profile?.avatar_url ? (
+                          <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                          <UserIcon className="w-5 h-5 text-accent-blue" />
+                        )}
+                      </div>
+                      <div className="text-left">
+                        <p className="text-sm font-serif">{profile?.full_name || 'Faithful Soul'}</p>
+                        <p className="text-[10px] uppercase tracking-widest text-white/40">View Sanctuary Profile</p>
+                      </div>
+                    </button>
+                    <button 
+                      onClick={() => {
+                        signOut();
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full glass-panel py-5 rounded-2xl text-[10px] uppercase tracking-widest font-bold hover:bg-red-500/10 hover:text-red-400 transition-all"
+                    >
+                      Log Out from Sanctuary
+                    </button>
+                  </>
+                ) : (
+                  <button 
+                    onClick={() => {
+                      setIsAuthModalOpen(true);
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full glass-panel py-6 rounded-3xl text-[12px] uppercase tracking-[0.3em] font-bold bg-accent-blue text-pure-black hover:scale-[1.02] active:scale-[0.98] transition-all"
+                  >
+                    Enter the Sanctuary
+                  </button>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Footer Floating Tab */}
-      <footer className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+          <footer className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
         <div className="glass-panel px-10 py-4 rounded-full flex gap-10 items-center whitespace-nowrap">
           <div className="specular-highlight rounded-full" />
           <div className="flex items-center gap-3 pr-8 border-r border-white/10">
@@ -828,15 +933,15 @@ export default function App() {
           </div>
           <div className="flex gap-10">
             <div className="flex items-center gap-3 group cursor-pointer">
-              <MapPin className="w-4 h-4 text-pure-white/40 group-hover:text-accent-blue transition-colors" />
+              <MapPinIcon className="w-4 h-4 text-pure-white/40 group-hover:text-accent-blue transition-colors" />
               <span className="text-[10px] uppercase tracking-widest text-pure-white/40">Find Us</span>
             </div>
             <div className="flex items-center gap-3 group cursor-pointer">
-              <Phone className="w-4 h-4 text-pure-white/40 group-hover:text-accent-blue transition-colors" />
+              <PhoneIcon className="w-4 h-4 text-pure-white/40 group-hover:text-accent-blue transition-colors" />
               <span className="text-[10px] uppercase tracking-widest text-pure-white/40">Rectory</span>
             </div>
             <div className="flex items-center gap-3 group cursor-pointer">
-              <Calendar className="w-4 h-4 text-pure-white/40 group-hover:text-accent-blue transition-colors" />
+              <CalendarIcon className="w-4 h-4 text-pure-white/40 group-hover:text-accent-blue transition-colors" />
               <span className="text-[10px] uppercase tracking-widest text-pure-white/40">Full Schedule</span>
             </div>
           </div>
