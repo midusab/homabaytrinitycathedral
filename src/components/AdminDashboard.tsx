@@ -128,12 +128,25 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
     if (!supabase) return;
     try {
       setLoading(true);
-      const { error } = await supabase.from('events').insert([{ ...newEvent }]);
-      if (error) throw error;
+      const isUpdating = !!(newEvent as any).id;
+      const eventData = {
+        title: newEvent.title,
+        date: newEvent.date,
+        description: newEvent.description,
+        category: newEvent.category
+      };
+
+      if (isUpdating) {
+        const { error } = await supabase.from('events').update(eventData).eq('id', (newEvent as any).id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('events').insert([eventData]);
+        if (error) throw error;
+      }
       setNewEvent({ title: '', date: '', description: '', category: 'Worship' });
     } catch (err: any) {
       console.error(err);
-      alert('Event creation failed: ' + err.message);
+      alert('Event action failed: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -391,7 +404,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                       <div className="space-y-8">
                          {/* Create Event Form */}
                          <form onSubmit={handleCreateEvent} className="glass-panel p-8 rounded-2xl border-accent-blue/10 bg-accent-blue/5">
-                            <h4 className="text-lg font-serif mb-6">Create New Liturgical Event</h4>
+                            <h4 className="text-lg font-serif mb-6">{(newEvent as any).id ? 'Edit Liturgical Event' : 'Create New Liturgical Event'}</h4>
                              <div className="grid md:grid-cols-2 gap-6">
                                <div className="space-y-3">
                                   <label className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Event Title</label>
@@ -423,8 +436,19 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                                   />
                                </div>
                             </div>
-                            <div className="mt-8 flex justify-end">
-                               <button disabled={loading} type="submit" className="glass-panel px-10 py-4 rounded-md text-[10px] uppercase tracking-widest font-bold hover:bg-accent-blue hover:text-pure-black transition-all">Publish Event</button>
+                            <div className="mt-8 flex justify-end gap-3">
+                               {(newEvent as any).id && (
+                                 <button 
+                                   type="button" 
+                                   onClick={() => setNewEvent({ title: '', date: '', description: '', category: 'Worship' })}
+                                   className="glass-panel px-10 py-4 rounded-md text-[10px] uppercase tracking-widest font-bold hover:bg-white/10 transition-all font-sans"
+                                 >
+                                    Cancel
+                                 </button>
+                               )}
+                               <button disabled={loading} type="submit" className="glass-panel px-10 py-4 rounded-md text-[10px] uppercase tracking-widest font-bold hover:bg-accent-blue hover:text-pure-black transition-all">
+                                 {(newEvent as any).id ? 'Update Event' : 'Publish Event'}
+                               </button>
                             </div>
                          </form>
 
@@ -442,14 +466,24 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                                   <h4 className="text-lg font-serif mb-1">{event.title}</h4>
                                   <p className="text-[10px] uppercase tracking-widest text-white/40 mb-3">{new Date(event.date).toLocaleDateString()} • {event.category}</p>
                                   <div className="flex gap-2">
-                                     <button className="text-[9px] uppercase tracking-widest font-bold text-accent-blue hover:underline">Edit Content</button>
+                                     <button 
+                                       onClick={() => {
+                                          setNewEvent({ ...event });
+                                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                                       }}
+                                       className="text-[9px] uppercase tracking-widest font-bold text-accent-blue hover:underline cursor-pointer"
+                                     >
+                                       Edit Content
+                                     </button>
                                      <span className="text-white/10 px-2">•</span>
-                                     <button className="text-[9px] uppercase tracking-widest font-bold text-accent-blue hover:underline">Gallery</button>
+                                     <button className="text-[9px] uppercase tracking-widest font-bold text-accent-blue hover:underline cursor-pointer">Gallery</button>
                                   </div>
                                </div>
-                               <button onClick={() => handleDeleteEvent(event.id)} className="p-3 text-white/20 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
-                                 <Trash2 className="w-4 h-4" />
-                               </button>
+                               <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                 <button onClick={() => handleDeleteEvent(event.id)} className="p-3 text-white/20 hover:text-red-500 transition-colors">
+                                   <Trash2 className="w-4 h-4" />
+                                 </button>
+                               </div>
                              </div>
                            ))}
                            {events.length === 0 && <p className="text-center text-white/40 py-8 italic">No upcoming events scheduled.</p>}
@@ -460,9 +494,9 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                     {activeTab === 'sermons' && (
                       <div className="space-y-8">
                          <form onSubmit={handleCreateSermon} className="glass-panel p-8 rounded-2xl border-accent-blue/10 bg-accent-blue/5">
-                            <h4 className="text-lg font-serif mb-6">Upload New Sermon</h4>
+                            <h4 className="text-lg font-serif mb-6">{(newSermon as any).id ? 'Edit Sermon Record' : 'Upload New Sermon'}</h4>
                             <div className="grid md:grid-cols-2 gap-6">
-                               <div className="space-y-3">
+                               <div className="space-y-3 md:col-span-2">
                                   <label className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Video Title</label>
                                   <input 
                                     required
@@ -473,6 +507,24 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                                   />
                                </div>
                                <div className="space-y-3">
+                                  <label className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Speaker / Clergy</label>
+                                  <input 
+                                    value={newSermon.speaker || ''}
+                                    onChange={e => setNewSermon({...newSermon, speaker: e.target.value})}
+                                    className="w-full bg-white/5 border border-white/10 rounded-md px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50" 
+                                    placeholder="e.g., Bishop Thomas" 
+                                  />
+                               </div>
+                               <div className="space-y-3">
+                                  <label className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Date Delivered</label>
+                                  <input 
+                                    type="date"
+                                    value={newSermon.date || ''}
+                                    onChange={e => setNewSermon({...newSermon, date: e.target.value})}
+                                    className="w-full bg-white/5 border border-white/10 rounded-md px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 [&::-webkit-calendar-picker-indicator]:invert" 
+                                  />
+                               </div>
+                               <div className="space-y-3 md:col-span-2">
                                   <label className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Video Source</label>
                                   <select 
                                     value={newSermon.type}
@@ -539,8 +591,19 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                                   )}
                                </div>
                             </div>
-                            <div className="mt-8 flex justify-end">
-                               <button disabled={loading || (!newSermon.url && newSermon.type === 'local')} type="submit" className="glass-panel px-10 py-4 rounded-md text-[10px] uppercase tracking-widest font-bold hover:bg-accent-blue hover:text-pure-black transition-all disabled:opacity-50">Publish Video</button>
+                            <div className="mt-8 flex justify-end gap-3">
+                               {(newSermon as any).id && (
+                                 <button 
+                                   type="button" 
+                                   onClick={() => setNewSermon({ title: '', speaker: '', date: '', url: '', type: 'link' })}
+                                   className="glass-panel px-10 py-4 rounded-md text-[10px] uppercase tracking-widest font-bold hover:bg-white/10 transition-all font-sans"
+                                 >
+                                    Cancel
+                                 </button>
+                               )}
+                               <button disabled={loading || (!newSermon.url && newSermon.type === 'local')} type="submit" className="glass-panel px-10 py-4 rounded-md text-[10px] uppercase tracking-widest font-bold hover:bg-accent-blue hover:text-pure-black transition-all disabled:opacity-50">
+                                 {(newSermon as any).id ? 'Update Video' : 'Publish Video'}
+                               </button>
                             </div>
                          </form>
 
