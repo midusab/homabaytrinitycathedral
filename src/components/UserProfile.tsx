@@ -35,6 +35,7 @@ export function UserProfile({ isOpen, onClose, onOpenAdmin }: UserProfileProps) 
     avatar_url: null,
     bio: ''
   });
+  const [myIntentions, setMyIntentions] = useState<any[]>([]);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -42,6 +43,28 @@ export function UserProfile({ isOpen, onClose, onOpenAdmin }: UserProfileProps) 
     if (user && isOpen) {
       fetchProfile();
     }
+  }, [user, isOpen]);
+
+  // Listen for admin responses in real-time
+  useEffect(() => {
+    if (!user || !isOpen || !supabase) return;
+
+    const subscription = supabase
+      .channel('my-intentions-realtime')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'intentions',
+        filter: `user_id=eq.${user.id}`
+      }, () => {
+        // Just re-fetch the profile data which includes the intention list
+        fetchProfile();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
   }, [user, isOpen]);
 
   async function fetchProfile() {
@@ -70,6 +93,18 @@ export function UserProfile({ isOpen, onClose, onOpenAdmin }: UserProfileProps) 
           full_name: user.user_metadata.full_name || ''
         }));
       }
+
+      // Fetch intentions
+      const { data: intentionsData, error: intentionsError } = await supabase
+        .from('intentions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (!intentionsError && intentionsData) {
+        setMyIntentions(intentionsData);
+      }
+
     } catch (err: any) {
       console.error('Error fetching profile:', err);
     } finally {
@@ -338,6 +373,41 @@ export function UserProfile({ isOpen, onClose, onOpenAdmin }: UserProfileProps) 
                     </button>
                   </div>
                 </form>
+              )}
+
+              {/* My Intentions Section */}
+              {!loading && myIntentions.length > 0 && (
+                <div className="mt-12 pt-12 border-t border-white/5">
+                  <h3 className="text-2xl font-serif mb-6">My Sacred Intentions</h3>
+                  <div className="space-y-4">
+                    {myIntentions.map(intention => (
+                      <div key={intention.id} className="glass-panel p-6 rounded-2xl border-white/5 bg-white/[0.02]">
+                        <div className="flex justify-between items-start mb-4">
+                          <p className="text-sm font-serif italic text-white/80">"{intention.message}"</p>
+                          <span className={`text-[9px] uppercase tracking-widest px-3 py-1 rounded-full font-bold whitespace-nowrap ml-4 ${
+                            intention.status === 'responded' 
+                            ? 'bg-green-500/10 text-green-400' 
+                            : 'bg-accent-blue/10 text-accent-blue'
+                          }`}>
+                            {intention.status === 'responded' ? 'Followed Up' : 'Pending'}
+                          </span>
+                        </div>
+                        {intention.status === 'responded' && (
+                          <div className="mt-4 pt-4 border-t border-white/5">
+                            <p className="text-[10px] uppercase tracking-widest text-white/40 mb-2 font-bold flex items-center gap-2">
+                              <ShieldIcon className="w-3 h-3 text-accent-blue" />
+                              Cathedral Response
+                            </p>
+                            <p className="text-xs text-accent-blue/90 max-w-2xl leading-relaxed">{intention.response_text}</p>
+                          </div>
+                        )}
+                        <p className="text-[9px] uppercase tracking-widest text-white/30 mt-4 text-right">
+                          Submitted on {new Date(intention.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           </motion.div>

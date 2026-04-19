@@ -19,67 +19,17 @@ import {
   Bookmark as BookmarkIcon,
   Sparkles as SparklesIcon,
   Search as SearchIcon,
-  Lock as LockIcon
+  Lock as LockIcon,
+  Loader2
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from './lib/supabase';
 import { useAuth } from './contexts/AuthContext';
 import { AuthModal } from './components/AuthModal';
 import { UserProfile } from './components/UserProfile';
 import { AdminDashboard } from './components/AdminDashboard';
 import { Logo } from './components/Logo';
 import { User as UserIcon } from 'lucide-react';
-
-const SERMONS = [
-  { 
-    title: 'The Architecture of Mercy', 
-    speaker: 'Most Rev. Dr. Michael Aris', 
-    date: 'April 19, 2026', 
-    thumbnail: 'https://images.unsplash.com/photo-1438232992991-995b7058df3c?w=800&auto=format&fit=crop',
-    tag: 'Holy Week'
-  },
-  { 
-    title: 'Light in the Modern Dark', 
-    speaker: 'Canon Sarah Jenkins', 
-    date: 'April 12, 2026', 
-    thumbnail: 'https://images.unsplash.com/photo-1548696444-12347de5fd04?w=800&auto=format&fit=crop',
-    tag: 'Faith & Ethics'
-  },
-  { 
-    title: 'Walking with the Master', 
-    speaker: 'Fr. Paul Newman', 
-    date: 'April 5, 2026', 
-    thumbnail: 'https://images.unsplash.com/photo-1549488344-c67be2d178e2?w=800&auto=format&fit=crop',
-    tag: 'Discipleship'
-  },
-  { 
-    title: 'The Silent Cathedral', 
-    speaker: 'Sister Mary Julian', 
-    date: 'March 29, 2026', 
-    thumbnail: 'https://images.unsplash.com/photo-1447069387593-a5de0862081c?w=800&auto=format&fit=crop',
-    tag: 'Contemplation'
-  },
-];
-
-const EVENTS = [
-  { 
-    title: 'Choral Evensong', 
-    time: 'Sun, 5:30 PM', 
-    desc: 'A meditative evening of prayer and sacred music.',
-    category: 'Worship'
-  },
-  { 
-    title: 'Young Adult Retreat', 
-    time: 'May 14-16', 
-    desc: 'A weekend of silence and spiritual direction.',
-    category: 'Community'
-  },
-  { 
-    title: 'St. Phoebe Outreach', 
-    time: 'Sat, 9:00 AM', 
-    desc: 'Serving our neighbors in the inner city center.',
-    category: 'Mission'
-  },
-];
 
 const MASS_TIMES = [
   { day: 'Sunday', time: '8:00 AM', location: 'Main Sanctuary', type: 'Low Mass' },
@@ -96,29 +46,16 @@ const MILESTONES = [
   { year: '2015', event: 'Grand Restoration', desc: 'A five-year project to restore the intricate stained glass and vaulted ceilings.' },
 ];
 
-const GALLERY_IMAGES = [
-  { url: 'https://images.unsplash.com/photo-1548696444-12347de5fd04?q=80&w=800&auto=format&fit=crop', title: 'The High Altar' },
-  { url: 'https://images.unsplash.com/photo-1438232992991-995b7058df3c?q=80&w=1000&auto=format&fit=crop', title: 'Stained Glass Details' },
-  { url: 'https://images.unsplash.com/photo-1543002588-b974596e744f?q=80&w=1200&auto=format&fit=crop', title: 'Gothic Vaulting' },
-  { url: 'https://images.unsplash.com/photo-1515162305285-0293e4767cc2?q=80&w=800&auto=format&fit=crop', title: 'Morning Light in the Nave' },
-  { url: 'https://images.unsplash.com/photo-1544427920-c49ccfb85579?q=80&w=800&auto=format&fit=crop', title: 'The Great Organ' },
-  { url: 'https://images.unsplash.com/photo-1447069387593-a5de0862081c?q=80&w=800&auto=format&fit=crop', title: 'Vigil Candles' },
-  { url: 'https://images.unsplash.com/photo-1549488344-c67be2d178e2?q=80&w=800&auto=format&fit=crop', title: 'Sacred Statuary' },
-  { url: 'https://images.unsplash.com/photo-1590059393160-c3227976e196?q=80&w=800&auto=format&fit=crop', title: 'Stone Carvings' },
-  { url: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=800&auto=format&fit=crop', title: 'Cathedral Exterior' },
-];
-
-const PRAYER_INTENTIONS = [
-  { name: 'Maria G.', message: 'For the health of my mother and for all those suffering in clinical care.', date: '2h ago' },
-  { name: 'Fr. Paul', message: 'In thanksgiving for the successful restoration of the Lady Chapel.', date: '5h ago' },
-  { name: 'Anonymous', message: 'Strengthen my faith during this season of transition and uncertainty.', date: '1d ago' },
-];
-
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [intentionMessage, setIntentionMessage] = useState('');
+  const [intentionSubmitting, setIntentionSubmitting] = useState(false);
+  const [intentionSuccess, setIntentionSuccess] = useState(false);
+  const [intentionError, setIntentionError] = useState('');
+  const [activeVideoSermon, setActiveVideoSermon] = useState<any>(null);
   const { user, profile, signOut } = useAuth();
   
   // Handle keyboard events (ESC to close)
@@ -129,6 +66,7 @@ export default function App() {
         setIsAuthModalOpen(false);
         setIsProfileOpen(false);
         setIsAdminOpen(false);
+        setActiveVideoSermon(null);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -159,6 +97,48 @@ export default function App() {
 
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
+  const [liveEvents, setLiveEvents] = useState<any[]>([]);
+  const [liveSermons, setLiveSermons] = useState<any[]>([]);
+  const [liveIntentions, setLiveIntentions] = useState<any[]>([]);
+
+  // Real-time synchronization for public data
+  useEffect(() => {
+    if (!supabase) return;
+
+    const fetchPublicData = async () => {
+      try {
+        const [
+          { data: eData },
+          { data: sData },
+          { data: iData }
+        ] = await Promise.all([
+          supabase.from('events').select('*').order('date', { ascending: true }).limit(5),
+          supabase.from('sermons').select('*').order('date', { ascending: false }).limit(4),
+          supabase.from('intentions').select('message, created_at, profiles(full_name)').order('created_at', { ascending: false }).limit(6)
+        ]);
+
+        if (eData) setLiveEvents(eData);
+        if (sData) setLiveSermons(sData);
+        if (iData) setLiveIntentions(iData);
+      } catch (err) {
+        console.error('Error fetching public data:', err);
+      }
+    };
+
+    fetchPublicData();
+
+    // Subscribe to all updates to automatically refetch
+    const pubSubscription = supabase.channel('public-data-stream')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, fetchPublicData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sermons' }, fetchPublicData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'intentions' }, fetchPublicData)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(pubSubscription);
+    };
+  }, []);
+
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({
@@ -175,6 +155,38 @@ export default function App() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleSubmitIntention = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !supabase) return;
+    if (!intentionMessage.trim()) {
+      setIntentionError('Please share your prayer intention.');
+      return;
+    }
+
+    setIntentionSubmitting(true);
+    setIntentionError('');
+    setIntentionSuccess(false);
+
+    try {
+      const { error } = await supabase.from('intentions').insert([
+        { 
+          user_id: user.id, 
+          message: intentionMessage.trim(),
+          status: 'pending'
+        }
+      ]);
+      if (error) throw error;
+      setIntentionSuccess(true);
+      setIntentionMessage('');
+      setTimeout(() => setIntentionSuccess(false), 5000);
+    } catch (err: any) {
+      console.error(err);
+      setIntentionError(err.message || 'Failed to submit intention. Please try again.');
+    } finally {
+      setIntentionSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-pure-black selection:bg-accent-blue selection:text-pure-black">
@@ -483,24 +495,43 @@ export default function App() {
                   <div className="specular-highlight rounded-[32px]" />
                   <h4 className="font-serif text-xl mb-6">Submit an Intention</h4>
                   {user ? (
-                    <form className="space-y-4">
-                      <input 
-                        type="text" 
-                        placeholder="Your Name (Optional)"
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 transition-all placeholder:text-white/20"
-                      />
-                      <textarea 
-                        rows={4}
-                        placeholder="Your prayer intention..."
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 transition-all placeholder:text-white/20 resize-none"
-                      ></textarea>
-                      <div className="flex items-center gap-4 mb-4">
-                        <input type="checkbox" id="public" className="rounded bg-white/5 border-white/10 text-accent-blue focus:ring-0" />
-                        <label htmlFor="public" className="text-[10px] uppercase tracking-widest text-white/40">Share on Community Board</label>
-                      </div>
-                      <button className="w-full glass-panel py-4 rounded-2xl text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-accent-blue hover:text-pure-black transition-all">
-                        Light a Virtual Candle
-                      </button>
+                    <form onSubmit={handleSubmitIntention} className="space-y-4">
+                      {intentionSuccess ? (
+                        <div className="bg-green-500/10 border border-green-500/20 text-green-400 p-4 rounded-2xl text-sm mb-4 text-center">
+                          Your intention has been submitted to the clergy.
+                        </div>
+                      ) : (
+                        <>
+                          <input 
+                            type="text" 
+                            disabled
+                            value={profile?.full_name || user.email || 'Anonymous Parisher'}
+                            className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm focus:outline-none transition-all text-white/50 cursor-not-allowed"
+                          />
+                          <textarea 
+                            rows={4}
+                            value={intentionMessage}
+                            onChange={(e) => setIntentionMessage(e.target.value)}
+                            placeholder="Your prayer intention..."
+                            className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 transition-all placeholder:text-white/20 resize-none"
+                          ></textarea>
+                          
+                          {intentionError && <p className="text-red-400 text-xs px-2">{intentionError}</p>}
+                          
+                          <div className="flex items-center gap-4 mb-4">
+                            <input type="checkbox" id="public" className="rounded bg-white/5 border-white/10 text-accent-blue focus:ring-0" />
+                            <label htmlFor="public" className="text-[10px] uppercase tracking-widest text-white/40">Share on Community Board</label>
+                          </div>
+                          
+                          <button 
+                            type="submit"
+                            disabled={intentionSubmitting}
+                            className="w-full glass-panel py-4 rounded-2xl text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-accent-blue hover:text-pure-black transition-all flex items-center justify-center gap-2"
+                          >
+                            {intentionSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Light a Virtual Candle</span>}
+                          </button>
+                        </>
+                      )}
                     </form>
                   ) : (
                     <div className="py-8 text-center">
@@ -518,47 +549,49 @@ export default function App() {
               </motion.div>
             </div>
 
-            <div className="lg:col-span-12 xl:col-span-8">
-              <div className="flex items-center justify-between mb-12">
-                <h3 className="text-2xl font-serif italic text-pure-white/70">Community Prayer Board</h3>
-                <div className="flex items-center gap-4">
-                  <div className="w-2 h-2 rounded-full bg-accent-blue animate-pulse" />
-                  <span className="text-[10px] tracking-widest uppercase text-white/40 font-bold">Live Support</span>
+            {liveIntentions.length > 0 && (
+              <div className="lg:col-span-12 xl:col-span-8">
+                <div className="flex items-center justify-between mb-12">
+                  <h3 className="text-2xl font-serif italic text-pure-white/70">Community Prayer Board</h3>
+                  <div className="flex items-center gap-4">
+                    <div className="w-2 h-2 rounded-full bg-accent-blue animate-pulse" />
+                    <span className="text-[10px] tracking-widest uppercase text-white/40 font-bold">Live Support</span>
+                  </div>
+                </div>
+                
+                <div className="grid md:grid-cols-2 gap-6">
+                  {liveIntentions.map((prayer, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: 20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                      viewport={{ once: true }}
+                      className="glass-panel p-8 rounded-[28px] hover:bg-white/5 transition-all group"
+                    >
+                      <div className="specular-highlight rounded-[28px]" />
+                      <div className="flex justify-between items-start mb-6">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 glass-panel rounded-full flex items-center justify-center text-accent-blue group-hover:scale-110 transition-transform">
+                            <Heart className="w-4 h-4" />
+                          </div>
+                          <span className="text-xs font-serif italic text-pure-white/80">{prayer.profiles?.full_name || 'Anonymous Soul'}</span>
+                        </div>
+                        <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">{new Date(prayer.created_at).toLocaleDateString()}</span>
+                      </div>
+                      <p className="text-sm text-pure-white/50 leading-relaxed italic">
+                        "{prayer.message}"
+                      </p>
+                      <div className="mt-8 flex justify-end">
+                        <button className="text-[10px] uppercase tracking-widest text-accent-blue/60 hover:text-accent-blue flex items-center gap-2 transition-colors">
+                          <MessageSquare className="w-3 h-3" /> Lift in Prayer
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
               </div>
-              
-              <div className="grid md:grid-cols-2 gap-6">
-                {PRAYER_INTENTIONS.map((prayer, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: 20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                    viewport={{ once: true }}
-                    className="glass-panel p-8 rounded-[28px] hover:bg-white/5 transition-all group"
-                  >
-                    <div className="specular-highlight rounded-[28px]" />
-                    <div className="flex justify-between items-start mb-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 glass-panel rounded-full flex items-center justify-center text-accent-blue group-hover:scale-110 transition-transform">
-                          <Heart className="w-4 h-4" />
-                        </div>
-                        <span className="text-xs font-serif italic text-pure-white/80">{prayer.name}</span>
-                      </div>
-                      <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">{prayer.date}</span>
-                    </div>
-                    <p className="text-sm text-pure-white/50 leading-relaxed italic">
-                      "{prayer.message}"
-                    </p>
-                    <div className="mt-8 flex justify-end">
-                      <button className="text-[10px] uppercase tracking-widest text-accent-blue/60 hover:text-accent-blue flex items-center gap-2 transition-colors">
-                        <MessageSquare className="w-3 h-3" /> Lift in Prayer
-                      </button>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
+            )}
           </div>
         </section>
 
@@ -629,142 +662,164 @@ export default function App() {
         </section>
 
         {/* Sacred Gallery Section */}
-        <section id="gallery" className="max-w-7xl mx-auto px-8 mb-32">
-          <div className="flex flex-col items-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-serif mb-4 text-glow text-center">Sacred Gallery</h2>
-            <div className="w-24 h-[1px] bg-accent-blue/50 mb-6" />
-            <p className="text-sm text-white/40 font-sans tracking-wide text-center max-w-xl">
-              A visual journey through the stone, light, and spirit of Trinity Cathedral. 
-              Witness the intersection of divine inspiration and architectural mastery.
-            </p>
-          </div>
-
-          <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
-            {GALLERY_IMAGES.map((image, i) => (
-              <motion.div
-                key={image.url}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.1, duration: 0.5 }}
-                viewport={{ once: true }}
-                className="relative group break-inside-avoid"
-              >
-                <div className="glass-panel p-2 rounded-[32px] overflow-hidden transition-all duration-500 group-hover:bg-white/10">
-                  <div className="specular-highlight rounded-[32px]" />
-                  <img 
-                    src={image.url} 
-                    alt={image.title}
-                    className="w-full rounded-[24px] object-cover transition-transform duration-700 group-hover:scale-105"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-pure-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-[32px]" />
-                  
-                  <div className="absolute bottom-6 left-6 right-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
-                    <p className="font-serif text-lg italic text-white/90">{image.title}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-
-        {/* Content Section */}
-        <div className="max-w-7xl mx-auto px-8 grid lg:grid-cols-12 gap-12">
-          
-          {/* Upcoming Sermons */}
-          <section id="sermons" className="lg:col-span-8">
-            <div className="flex justify-between items-end mb-12">
-              <div>
-                <h2 className="text-3xl font-serif mb-2">Upcoming Sermons</h2>
-                <p className="text-sm text-pure-white/40 font-sans tracking-wide">Exploring the Gospel in a contemporary world.</p>
-              </div>
-              <button className="text-xs uppercase tracking-tighter text-accent-blue font-bold flex items-center gap-2 hover:translate-x-1 transition-transform">
-                Archive <ChevronRightIcon className="w-4 h-4" />
-              </button>
+        {liveEvents.filter(e => e.image_url).length > 0 && (
+          <section id="gallery" className="max-w-7xl mx-auto px-8 mb-32">
+            <div className="flex flex-col items-center mb-16">
+              <h2 className="text-4xl md:text-5xl font-serif mb-4 text-glow text-center">Sacred Gallery</h2>
+              <div className="w-24 h-[1px] bg-accent-blue/50 mb-6" />
+              <p className="text-sm text-white/40 font-sans tracking-wide text-center max-w-xl">
+                A visual journey through the stone, light, and spirit of Trinity Cathedral. 
+                Witness the intersection of divine inspiration and architectural mastery.
+              </p>
             </div>
 
-            <div className="space-y-6">
-              {SERMONS.map((sermon, i) => (
+            <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
+              {liveEvents.filter(e => e.image_url).map((event, i) => (
                 <motion.div
-                  key={sermon.title}
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.1 }}
+                  key={event.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.1, duration: 0.5 }}
                   viewport={{ once: true }}
-                  className="glass-panel group p-1 rounded-[32px] hover:bg-white/5 transition-colors"
+                  className="relative group break-inside-avoid"
                 >
-                  <div className="specular-highlight rounded-[32px]" />
-                  <div className="flex flex-col md:flex-row gap-6 p-4">
-                    <div className="w-full md:w-48 h-32 rounded-2xl overflow-hidden relative">
-                      <img src={sermon.thumbnail} alt={sermon.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" referrerPolicy="no-referrer" />
-                      <div className="absolute inset-0 bg-premium-blue/30 mix-blend-multiply" />
-                    </div>
-                    <div className="flex-1 py-2 pr-4 flex flex-col justify-between">
-                      <div>
-                        <span className="text-[10px] font-sans uppercase tracking-widest text-accent-blue mb-2 block">{sermon.tag}</span>
-                        <h3 className="text-2xl font-serif mb-2">{sermon.title}</h3>
-                        <p className="text-sm text-pure-white/50">{sermon.speaker}</p>
-                      </div>
-                      <div className="flex items-center justify-between mt-4">
-                        <span className="text-[10px] font-sans text-pure-white/30 uppercase tracking-widest">{sermon.date}</span>
-                        <div className="flex gap-4">
-                          <button className="text-pure-white/30 hover:text-pure-white transition-colors"><BookmarkIcon className="w-4 h-4" /></button>
-                          <button className="text-pure-white/30 hover:text-pure-white transition-colors"><Share2Icon className="w-4 h-4" /></button>
-                        </div>
-                      </div>
+                  <div className="glass-panel p-2 rounded-[32px] overflow-hidden transition-all duration-500 group-hover:bg-white/10">
+                    <div className="specular-highlight rounded-[32px]" />
+                    <img 
+                      src={event.image_url} 
+                      alt={event.title}
+                      className="w-full rounded-[24px] object-cover transition-transform duration-700 group-hover:scale-105"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-pure-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-[32px]" />
+                    
+                    <div className="absolute bottom-6 left-6 right-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                      <p className="font-serif text-lg italic text-white/90">{event.title}</p>
                     </div>
                   </div>
                 </motion.div>
               ))}
             </div>
           </section>
+        )}
 
-          {/* Community Events */}
-          <section id="events" className="lg:col-span-4">
-            <div className="glass-panel rounded-[40px] h-full p-10 flex flex-col relative overflow-hidden">
-              <div className="specular-highlight rounded-[40px]" />
-              
-              {/* Decorative Header Image */}
-              <div className="absolute top-0 right-0 w-32 h-32 -mr-8 -mt-8 opacity-20 pointer-events-none">
-                <img 
-                  src="https://images.unsplash.com/photo-1590059393160-c3227976e196?q=80&w=400&auto=format&fit=crop" 
-                  alt="Stone Carving Detail" 
-                  className="w-full h-full object-cover rounded-full"
-                  referrerPolicy="no-referrer"
-                />
+        {/* Content Section */}
+        <div className="max-w-7xl mx-auto px-8 grid lg:grid-cols-12 gap-12">
+          
+          {/* Upcoming Sermons */}
+          {liveSermons.length > 0 && (
+            <section id="sermons" className="lg:col-span-8">
+              <div className="flex justify-between items-end mb-12">
+                <div>
+                  <h2 className="text-3xl font-serif mb-2">Sermon Archive</h2>
+                  <p className="text-sm text-pure-white/40 font-sans tracking-wide">Exploring the Gospel in a contemporary world.</p>
+                </div>
+                <button className="text-xs uppercase tracking-tighter text-accent-blue font-bold flex items-center gap-2 hover:translate-x-1 transition-transform">
+                  Archive <ChevronRightIcon className="w-4 h-4" />
+                </button>
               </div>
 
-              <div className="flex items-center gap-4 mb-12 relative z-10">
-                <SparklesIcon className="w-6 h-6 text-accent-blue" />
-                <h2 className="text-3xl font-serif">Communion</h2>
-              </div>
-
-              <div className="space-y-12 flex-1">
-                {EVENTS.map((event, i) => (
-                  <motion.div 
-                    key={event.title}
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    transition={{ delay: 0.3 + (i * 0.1) }}
+              <div className="space-y-6">
+                {liveSermons.map((sermon, i) => (
+                  <motion.div
+                    key={sermon.id || sermon.title}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 }}
                     viewport={{ once: true }}
-                    className="relative"
+                    className="glass-panel group p-1 rounded-[32px] hover:bg-white/5 transition-colors cursor-pointer"
+                    onClick={() => setActiveVideoSermon(sermon)}
                   >
-                    <div className="flex justify-between items-start mb-3">
-                      <span className="text-[10px] uppercase tracking-widest font-bold text-accent-blue">{event.category}</span>
-                      <span className="text-[10px] font-sans text-white/40">{event.time}</span>
+                    <div className="specular-highlight rounded-[32px]" />
+                    <div className="flex flex-col md:flex-row gap-6 p-4">
+                      <div className="w-full md:w-48 h-32 rounded-2xl overflow-hidden relative border border-white/5 bg-white/5 flex items-center justify-center">
+                        {sermon.thumbnail ? (
+                          <>
+                            <img src={sermon.thumbnail} alt={sermon.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" referrerPolicy="no-referrer" />
+                            <div className="absolute inset-0 bg-premium-blue/30 mix-blend-multiply" />
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="w-12 h-12 rounded-full glass-panel flex items-center justify-center text-pure-white bg-black/40 backdrop-blur-md">
+                                <PlayIcon className="w-5 h-5 ml-1" />
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="group-hover:scale-110 transition-transform flex items-center justify-center w-12 h-12 rounded-full glass-panel bg-black/40 backdrop-blur-md">
+                            <PlayIcon className="w-5 h-5 text-pure-white ml-1" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 py-2 pr-4 flex flex-col justify-between">
+                        <div>
+                          <span className="text-[10px] font-sans uppercase tracking-widest text-accent-blue mb-2 block">{sermon.tag || 'Sermon'}</span>
+                          <h3 className="text-2xl font-serif mb-2">{sermon.title}</h3>
+                          <p className="text-sm text-pure-white/50">{sermon.speaker}</p>
+                        </div>
+                        <div className="flex items-center justify-between mt-4">
+                          <span className="text-[10px] font-sans text-pure-white/30 uppercase tracking-widest">
+                            {new Date(sermon.date).toLocaleDateString()}
+                          </span>
+                          <div className="flex gap-4">
+                            <button className="text-pure-white/30 hover:text-pure-white transition-colors"><BookmarkIcon className="w-4 h-4" /></button>
+                            <button className="text-pure-white/30 hover:text-pure-white transition-colors"><Share2Icon className="w-4 h-4" /></button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <h4 className="text-xl font-serif mb-3 hover:text-accent-blue cursor-pointer transition-colors">{event.title}</h4>
-                    <p className="text-sm text-white/50 leading-relaxed font-sans">{event.desc}</p>
-                    {i !== EVENTS.length - 1 && <div className="absolute -bottom-6 left-0 right-0 h-[1px] bg-white/5" />}
                   </motion.div>
                 ))}
               </div>
+            </section>
+          )}
 
-              <button className="mt-12 glass-panel w-full py-5 rounded-2xl text-xs uppercase tracking-[0.2em] font-bold hover:bg-white/10 transition-colors">
-                View All Events
-              </button>
-            </div>
-          </section>
+          {/* Community Events */}
+          {liveEvents.length > 0 && (
+            <section id="events" className="lg:col-span-4">
+              <div className="glass-panel rounded-[40px] h-full p-10 flex flex-col relative overflow-hidden">
+                <div className="specular-highlight rounded-[40px]" />
+                
+                {/* Decorative Header Image */}
+                <div className="absolute top-0 right-0 w-32 h-32 -mr-8 -mt-8 opacity-20 pointer-events-none">
+                  <img 
+                    src="https://images.unsplash.com/photo-1590059393160-c3227976e196?q=80&w=400&auto=format&fit=crop" 
+                    alt="Stone Carving Detail" 
+                    className="w-full h-full object-cover rounded-full"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+
+                <div className="flex items-center gap-4 mb-12 relative z-10">
+                  <SparklesIcon className="w-6 h-6 text-accent-blue" />
+                  <h2 className="text-3xl font-serif">Communion</h2>
+                </div>
+
+                <div className="space-y-12 flex-1">
+                  {liveEvents.map((event, i) => (
+                    <motion.div 
+                      key={event.id}
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      transition={{ delay: 0.3 + (i * 0.1) }}
+                      viewport={{ once: true }}
+                      className="relative"
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <span className="text-[10px] uppercase tracking-widest font-bold text-accent-blue">{event.category}</span>
+                        <span className="text-[10px] font-sans text-white/40">{new Date(event.date).toLocaleDateString()}</span>
+                      </div>
+                      <h4 className="text-xl font-serif mb-3 hover:text-accent-blue cursor-pointer transition-colors">{event.title}</h4>
+                      <p className="text-sm text-white/50 leading-relaxed font-sans">{event.description || 'Join us for this special liturgical occasion.'}</p>
+                      {i !== liveEvents.length - 1 && <div className="absolute -bottom-6 left-0 right-0 h-[1px] bg-white/5" />}
+                    </motion.div>
+                  ))}
+                </div>
+
+                <button className="mt-12 glass-panel w-full py-5 rounded-2xl text-xs uppercase tracking-[0.2em] font-bold hover:bg-white/10 transition-colors">
+                  View All Events
+                </button>
+              </div>
+            </section>
+          )}
 
         {/* Upcoming Sermons & Events Grid Wrapper End */}
         </div>
@@ -1015,6 +1070,52 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Video Modal Overlay */}
+      <AnimatePresence>
+        {activeVideoSermon && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[120] flex items-center justify-center p-4 md:p-8"
+          >
+            <div className="absolute inset-0 bg-pure-black/95 backdrop-blur-3xl" onClick={() => setActiveVideoSermon(null)} />
+            
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative w-full max-w-5xl aspect-video glass-panel rounded-3xl overflow-hidden border border-white/10 shadow-2xl flex items-center justify-center bg-black"
+            >
+              <button 
+                onClick={() => setActiveVideoSermon(null)}
+                className="absolute top-4 right-4 z-50 p-2 glass-panel rounded-full hover:bg-white/10 transition-colors"
+              >
+                <XIcon className="w-5 h-5 text-white" />
+              </button>
+
+              {(!activeVideoSermon.video_type || activeVideoSermon.video_type === 'link') ? (
+                <iframe
+                  className="w-full h-full"
+                  src={activeVideoSermon.video_url?.includes('watch?v=') ? activeVideoSermon.video_url.replace('watch?v=', 'embed/') : (activeVideoSermon.video_url || '')}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              ) : (
+                <video
+                  className="w-full h-full object-cover"
+                  src={activeVideoSermon.video_url || ''}
+                  controls
+                  autoPlay
+                >
+                  Your browser does not support the video tag.
+                </video>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

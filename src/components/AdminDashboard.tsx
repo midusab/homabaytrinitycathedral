@@ -17,7 +17,8 @@ import {
   ShieldCheck,
   Bell,
   Image as ImageIcon,
-  Loader2
+  Loader2,
+  Edit
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -44,7 +45,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
   const [loading, setLoading] = useState(false);
 
   // Form State for Events
-  const [newEvent, setNewEvent] = useState({ title: '', date: '', desc: '', category: 'Worship' });
+  const [newEvent, setNewEvent] = useState({ title: '', date: '', description: '', category: 'Worship' });
   const [newSermon, setNewSermon] = useState({ title: '', speaker: '', date: '', url: '', type: 'link' });
 
   useEffect(() => {
@@ -121,6 +122,103 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
       setLoading(false);
     }
   }
+
+  const handleCreateEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supabase) return;
+    try {
+      setLoading(true);
+      const { error } = await supabase.from('events').insert([{ ...newEvent }]);
+      if (error) throw error;
+      setNewEvent({ title: '', date: '', description: '', category: 'Worship' });
+    } catch (err: any) {
+      console.error(err);
+      alert('Event creation failed: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteEvent = async (id: string) => {
+    if (!supabase || !confirm('Are you certain you want to remove this event from the timeline?')) return;
+    try {
+      setLoading(true);
+      await supabase.from('events').delete().eq('id', id);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateSermon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supabase) return;
+    try {
+      setLoading(true);
+      const isUpdating = !!(newSermon as any).id;
+      const sermonData = {
+        title: newSermon.title,
+        speaker: newSermon.speaker || profile?.full_name || 'Clergy',
+        date: newSermon.date || new Date().toISOString().split('T')[0],
+        video_url: newSermon.url,
+        video_type: newSermon.type === 'link' ? 'link' : 'local'
+      };
+
+      if (isUpdating) {
+        const { error } = await supabase.from('sermons').update(sermonData).eq('id', (newSermon as any).id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('sermons').insert([sermonData]);
+        if (error) throw error;
+      }
+      setNewSermon({ title: '', speaker: '', date: '', url: '', type: 'link' });
+    } catch (err: any) {
+      console.error(err);
+      alert('Sermon archival failed: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteSermon = async (id: string) => {
+    if (!supabase || !confirm('Delete this sermon record?')) return;
+    try {
+      setLoading(true);
+      await supabase.from('sermons').delete().eq('id', id);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // State to hold draft responses
+  const [intentionResponses, setIntentionResponses] = useState<Record<string, string>>({});
+
+  const handleRespondIntention = async (id: string) => {
+    if (!supabase) return;
+    const responseText = intentionResponses[id];
+    if (!responseText) return;
+    
+    try {
+      setLoading(true);
+      const { error } = await supabase.from('intentions').update({
+        status: 'responded',
+        response_text: responseText,
+        responded_at: new Date().toISOString()
+      }).eq('id', id);
+      
+      if (error) throw error;
+      // Clear input
+      setIntentionResponses(prev => ({ ...prev, [id]: '' }));
+    } catch (err: any) {
+      console.error(err);
+      alert('Failed to send response: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAdminAuth = (e: React.FormEvent) => {
     e.preventDefault();
@@ -291,80 +389,245 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
 
                     {activeTab === 'events' && (
                       <div className="space-y-8">
-                         {/* Simple Event Feed Placeholder */}
-                         <div className="grid gap-6">
-                           {[1,2,3].map(i => (
-                             <div key={i} className="glass-panel p-6 rounded-2xl flex items-center gap-6 group hover:bg-white/[0.03] transition-colors">
+                         {/* Create Event Form */}
+                         <form onSubmit={handleCreateEvent} className="glass-panel p-8 rounded-3xl border-accent-blue/10 bg-accent-blue/5">
+                            <h4 className="text-lg font-serif mb-6">Create New Liturgical Event</h4>
+                             <div className="grid md:grid-cols-2 gap-6">
+                               <div className="space-y-3">
+                                  <label className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Event Title</label>
+                                  <input 
+                                    required
+                                    value={newEvent.title}
+                                    onChange={e => setNewEvent({...newEvent, title: e.target.value})}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50" 
+                                    placeholder="Easter Vigil" 
+                                  />
+                               </div>
+                               <div className="space-y-3">
+                                  <label className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Event Date</label>
+                                  <input 
+                                    required
+                                    type="date"
+                                    value={newEvent.date}
+                                    onChange={e => setNewEvent({...newEvent, date: e.target.value})}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50" 
+                                  />
+                               </div>
+                               <div className="space-y-3 md:col-span-2">
+                                  <label className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Description</label>
+                                  <textarea 
+                                    value={newEvent.description}
+                                    onChange={e => setNewEvent({...newEvent, description: e.target.value})}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 resize-none h-24" 
+                                    placeholder="Brief description of the event..." 
+                                  />
+                               </div>
+                            </div>
+                            <div className="mt-8 flex justify-end">
+                               <button disabled={loading} type="submit" className="glass-panel px-10 py-4 rounded-xl text-[10px] uppercase tracking-widest font-bold hover:bg-accent-blue hover:text-pure-black transition-all">Publish Event</button>
+                            </div>
+                         </form>
+
+                         <div className="grid gap-6 mt-8">
+                           {events.map(event => (
+                             <div key={event.id} className="glass-panel p-6 rounded-2xl flex items-center gap-6 group hover:bg-white/[0.03] transition-colors">
                                <div className="w-24 h-24 bg-white/5 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0 border border-white/5">
-                                 <ImageIcon className="w-6 h-6 text-white/10" />
+                                 {event.image_url ? (
+                                   <img src={event.image_url} alt="" className="w-full h-full object-cover" />
+                                 ) : (
+                                   <ImageIcon className="w-6 h-6 text-white/10" />
+                                 )}
                                </div>
                                <div className="flex-1">
-                                  <h4 className="text-lg font-serif mb-1">Cathedral Restoration Celebration {i}</h4>
-                                  <p className="text-[10px] uppercase tracking-widest text-white/40 mb-3">May 24, 2026 • Liturgy</p>
+                                  <h4 className="text-lg font-serif mb-1">{event.title}</h4>
+                                  <p className="text-[10px] uppercase tracking-widest text-white/40 mb-3">{new Date(event.date).toLocaleDateString()} • {event.category}</p>
                                   <div className="flex gap-2">
                                      <button className="text-[9px] uppercase tracking-widest font-bold text-accent-blue hover:underline">Edit Content</button>
                                      <span className="text-white/10 px-2">•</span>
-                                     <button className="text-[9px] uppercase tracking-widest font-bold text-accent-blue hover:underline">Gallery Management</button>
+                                     <button className="text-[9px] uppercase tracking-widest font-bold text-accent-blue hover:underline">Gallery</button>
                                   </div>
                                </div>
-                               <button className="p-3 text-white/20 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                               <button onClick={() => handleDeleteEvent(event.id)} className="p-3 text-white/20 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
                                  <Trash2 className="w-4 h-4" />
                                </button>
                              </div>
                            ))}
+                           {events.length === 0 && <p className="text-center text-white/40 py-8 italic">No upcoming events scheduled.</p>}
                          </div>
                       </div>
                     )}
 
                     {activeTab === 'sermons' && (
                       <div className="space-y-8">
-                         <div className="glass-panel p-8 rounded-3xl border-accent-blue/10 bg-accent-blue/5">
+                         <form onSubmit={handleCreateSermon} className="glass-panel p-8 rounded-3xl border-accent-blue/10 bg-accent-blue/5">
                             <h4 className="text-lg font-serif mb-6">Upload New Sermon</h4>
                             <div className="grid md:grid-cols-2 gap-6">
                                <div className="space-y-3">
                                   <label className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Video Title</label>
-                                  <input className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50" placeholder="The Path to Clarity" />
+                                  <input 
+                                    required
+                                    value={newSermon.title}
+                                    onChange={e => setNewSermon({...newSermon, title: e.target.value})}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50" 
+                                    placeholder="The Path to Clarity" 
+                                  />
                                </div>
                                <div className="space-y-3">
-                                  <label className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Source Type</label>
-                                  <select className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-sm focus:outline-none appearance-none">
-                                     <option>YouTube / Vimeo Link</option>
-                                     <option>Direct Upload (Supabase)</option>
+                                  <label className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Video Source</label>
+                                  <select 
+                                    value={newSermon.type}
+                                    onChange={e => setNewSermon({...newSermon, type: e.target.value as 'link' | 'local'})}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 [&>option]:bg-pure-black"
+                                  >
+                                    <option value="link">External Link (YouTube/Vimeo)</option>
+                                    <option value="local">Direct Video Upload</option>
                                   </select>
+                               </div>
+                               <div className="space-y-3 md:col-span-2">
+                                  {newSermon.type === 'link' ? (
+                                    <>
+                                      <label className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Source Link</label>
+                                      <input 
+                                        required={newSermon.type === 'link'}
+                                        value={newSermon.url}
+                                        onChange={e => setNewSermon({...newSermon, url: e.target.value})}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50" 
+                                        placeholder="https://youtube.com/watch?v=..." 
+                                      />
+                                    </>
+                                  ) : (
+                                    <>
+                                      <label className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Upload MP4 Video</label>
+                                      <input 
+                                        type="file"
+                                        accept="video/mp4,video/x-m4v,video/*"
+                                        onChange={async (e) => {
+                                          const file = e.target.files?.[0];
+                                          if (!file || !supabase) return;
+                                          try {
+                                            setLoading(true);
+                                            // Make sure we have a unique path
+                                            const fileExt = file.name.split('.').pop();
+                                            const filePath = `sermons/${Date.now()}-${Math.random()}.${fileExt}`;
+                                            
+                                            // Using the 'avatars' storage bucket since we know it exists (User profile uses it)
+                                            // You can change this if there's a dedicated video bucket
+                                            const { error: uploadError } = await supabase.storage
+                                              .from('avatars')
+                                              .upload(filePath, file);
+
+                                            if (uploadError) throw uploadError;
+
+                                            const { data: { publicUrl } } = supabase.storage
+                                              .from('avatars')
+                                              .getPublicUrl(filePath);
+
+                                            setNewSermon({...newSermon, url: publicUrl});
+                                          } catch (error: any) {
+                                            console.error("Upload failed", error);
+                                            alert("Upload failed: " + error.message);
+                                          } finally {
+                                            setLoading(false);
+                                          }
+                                        }}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-sm focus:outline-none focus:border-accent-blue/50 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:uppercase file:tracking-widest file:font-semibold file:bg-accent-blue file:text-pure-black hover:file:bg-accent-blue/80" 
+                                      />
+                                      {newSermon.url && newSermon.type === 'local' && (
+                                        <p className="text-[10px] text-green-400 mt-2">Video uploaded successfully!</p>
+                                      )}
+                                    </>
+                                  )}
                                </div>
                             </div>
                             <div className="mt-8 flex justify-end">
-                               <button className="glass-panel px-10 py-4 rounded-xl text-[10px] uppercase tracking-widest font-bold hover:bg-accent-blue hover:text-pure-black transition-all">Publish Video</button>
+                               <button disabled={loading || (!newSermon.url && newSermon.type === 'local')} type="submit" className="glass-panel px-10 py-4 rounded-xl text-[10px] uppercase tracking-widest font-bold hover:bg-accent-blue hover:text-pure-black transition-all disabled:opacity-50">Publish Video</button>
                             </div>
+                         </form>
+
+                         <div className="grid gap-6 mt-8">
+                           {sermons.map(sermon => (
+                             <div key={sermon.id} className="glass-panel p-6 rounded-2xl flex items-center justify-between group hover:bg-white/[0.03] transition-colors">
+                               <div>
+                                  <h4 className="text-lg font-serif mb-1">{sermon.title}</h4>
+                                  <p className="text-[10px] uppercase tracking-widest text-white/40">
+                                    {sermon.speaker} • {new Date(sermon.date).toLocaleDateString()}
+                                  </p>
+                               </div>
+                               <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                 <button onClick={() => {
+                                   setNewSermon({
+                                     ...sermon,
+                                     url: sermon.video_url,
+                                     type: sermon.video_type || 'link'
+                                   });
+                                   window.scrollTo({ top: 0, behavior: 'smooth' });
+                                 }} className="p-3 text-white/20 hover:text-accent-blue transition-colors">
+                                   <Edit className="w-4 h-4" />
+                                 </button>
+                                 <button onClick={() => handleDeleteSermon(sermon.id)} className="p-3 text-white/20 hover:text-red-500 transition-colors">
+                                   <Trash2 className="w-4 h-4" />
+                                 </button>
+                               </div>
+                             </div>
+                           ))}
+                           {sermons.length === 0 && <p className="text-center text-white/40 py-8 italic">No sermons archived yet.</p>}
                          </div>
                       </div>
                     )}
 
                     {activeTab === 'intentions' && (
                       <div className="space-y-6">
-                        {[1,2,3].map(i => (
-                          <div key={i} className="glass-panel p-8 rounded-3xl relative group">
+                        {intentions.map(intention => (
+                          <div key={intention.id} className="glass-panel p-8 rounded-3xl relative group">
                             <div className="flex justify-between items-start mb-6">
                                <div className="flex items-center gap-4">
-                                  <div className="w-10 h-10 rounded-full bg-accent-blue/10 flex items-center justify-center text-accent-blue text-xs font-bold font-serif">M</div>
+                                  <div className="w-10 h-10 rounded-full bg-accent-blue/10 flex items-center justify-center text-accent-blue text-xs font-bold font-serif">
+                                    {(intention.profiles?.full_name || 'A')[0].toUpperCase()}
+                                  </div>
                                   <div>
-                                     <p className="text-sm font-serif">Maria Gonzalez</p>
-                                     <p className="text-[9px] uppercase tracking-widest text-white/30">maria.g@gmail.com</p>
+                                     <p className="text-sm font-serif">{intention.profiles?.full_name || 'Anonymous Soul'}</p>
+                                     {intention.profiles?.email && (
+                                       <p className="text-[9px] uppercase tracking-widest text-white/30">{intention.profiles.email}</p>
+                                     )}
                                   </div>
                                </div>
-                               <span className="text-[9px] uppercase tracking-widest px-3 py-1 bg-accent-blue/10 text-accent-blue rounded-full font-bold">Pending Response</span>
+                               <span className={`text-[9px] uppercase tracking-widest px-3 py-1 rounded-full font-bold ${
+                                 intention.status === 'responded' 
+                                 ? 'bg-green-500/10 text-green-400' 
+                                 : 'bg-accent-blue/10 text-accent-blue'
+                               }`}>
+                                 {intention.status === 'responded' ? 'Followed Up' : 'Pending Response'}
+                               </span>
                             </div>
-                            <p className="text-sm text-pure-white/60 leading-relaxed italic border-l-2 border-accent-blue/20 pl-6 mb-8">
-                               "I am praying for my grandmother's recovery from surgery. Please include her in the weekly litany of the sick."
+                            <p className="text-sm text-pure-white/80 leading-relaxed italic border-l-2 border-accent-blue/20 pl-6 mb-8">
+                               "{intention.message}"
                             </p>
-                            <div className="flex items-center gap-4 border-t border-white/5 pt-6">
-                               <input className="flex-1 bg-white/5 border border-white/10 rounded-xl px-6 py-3 text-xs focus:outline-none focus:border-accent-blue/30" placeholder="Type an encouraging response from the cathedral..." />
-                               <button className="glass-panel p-3 rounded-xl hover:bg-accent-blue hover:text-pure-black transition-all">
-                                  <Check className="w-4 h-4" />
-                               </button>
-                            </div>
+
+                            {intention.status === 'responded' ? (
+                              <div className="border-t border-white/5 pt-6">
+                                <p className="text-[10px] uppercase tracking-widest text-white/40 mb-2 font-bold">Cathedral Response ({new Date(intention.responded_at).toLocaleDateString()})</p>
+                                <p className="text-sm text-accent-blue">{intention.response_text}</p>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-4 border-t border-white/5 pt-6">
+                                 <input 
+                                   value={intentionResponses[intention.id] || ''}
+                                   onChange={e => setIntentionResponses({...intentionResponses, [intention.id]: e.target.value})}
+                                   className="flex-1 bg-white/5 border border-white/10 rounded-xl px-6 py-3 text-xs focus:outline-none focus:border-accent-blue/30" 
+                                   placeholder="Type an encouraging response from the cathedral..." 
+                                 />
+                                 <button 
+                                   onClick={() => handleRespondIntention(intention.id)}
+                                   disabled={loading || !intentionResponses[intention.id]}
+                                   className="glass-panel p-3 rounded-xl hover:bg-accent-blue hover:text-pure-black transition-all disabled:opacity-50 disabled:hover:bg-white/5 disabled:hover:text-white"
+                                 >
+                                    <Check className="w-4 h-4" />
+                                 </button>
+                              </div>
+                            )}
                           </div>
                         ))}
+                        {intentions.length === 0 && <p className="text-center text-white/40 py-8 italic">No prayer intentions submitted.</p>}
                       </div>
                     )}
 
