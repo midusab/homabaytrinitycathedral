@@ -100,6 +100,8 @@ export default function App() {
   const [liveEvents, setLiveEvents] = useState<any[]>([]);
   const [liveSermons, setLiveSermons] = useState<any[]>([]);
   const [liveIntentions, setLiveIntentions] = useState<any[]>([]);
+  const [siteSettings, setSiteSettings] = useState<any>(null);
+  const [galleryItems, setGalleryItems] = useState<any[]>([]);
 
   // Real-time synchronization for public data
   useEffect(() => {
@@ -110,16 +112,22 @@ export default function App() {
         const [
           { data: eData },
           { data: sData },
-          { data: iData }
+          { data: iData },
+          { data: ssData },
+          { data: gData }
         ] = await Promise.all([
           supabase.from('events').select('*').order('date', { ascending: true }).limit(5),
           supabase.from('sermons').select('*').order('date', { ascending: false }).limit(4),
-          supabase.from('intentions').select('message, created_at, profiles(full_name)').order('created_at', { ascending: false }).limit(6)
+          supabase.from('intentions').select('message, created_at, profiles(full_name)').order('created_at', { ascending: false }).limit(6),
+          supabase.from('site_settings').select('*').eq('id', 1).single(),
+          supabase.from('gallery').select('*').order('created_at', { ascending: false })
         ]);
 
         if (eData) setLiveEvents(eData);
         if (sData) setLiveSermons(sData);
         if (iData) setLiveIntentions(iData);
+        if (ssData) setSiteSettings(ssData);
+        if (gData) setGalleryItems(gData);
       } catch (err) {
         console.error('Error fetching public data:', err);
       }
@@ -132,6 +140,8 @@ export default function App() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, fetchPublicData)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sermons' }, fetchPublicData)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'intentions' }, fetchPublicData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'site_settings' }, fetchPublicData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gallery' }, fetchPublicData)
       .subscribe();
 
     return () => {
@@ -298,7 +308,7 @@ export default function App() {
               initial={{ scale: 1.2, opacity: 0 }}
               animate={{ opacity: 0.4 }}
               transition={{ duration: 2.5, ease: "easeOut" }}
-              src="https://images.unsplash.com/photo-1548003929-79885acc5593?q=80&w=2000&auto=format&fit=crop" 
+              src={siteSettings?.hero_image_url || "https://images.unsplash.com/photo-1548003929-79885acc5593?q=80&w=2000&auto=format&fit=crop"} 
               alt="Cathedral Interior Background" 
               className="w-full h-full object-cover filter brightness-50 contrast-125"
               referrerPolicy="no-referrer"
@@ -640,8 +650,8 @@ export default function App() {
               >
                 <div className="specular-highlight rounded-[28px]" />
                 <img 
-                  src="https://images.unsplash.com/photo-1543002588-b974596e744f?w=1200&auto=format&fit=crop" 
-                  alt="Cathedral Vaulted Ceiling" 
+                  src={siteSettings?.history_image_url || "https://images.unsplash.com/photo-1543002588-b974596e744f?w=1200&auto=format&fit=crop"} 
+                  alt="Trinity Cathedral History" 
                   className="rounded-2xl w-full h-[600px] object-cover"
                   referrerPolicy="no-referrer"
                 />
@@ -662,7 +672,7 @@ export default function App() {
         </section>
 
         {/* Sacred Gallery Section */}
-        {liveEvents.filter(e => e.image_url).length > 0 && (
+        {galleryItems.length > 0 && (
           <section id="gallery" className="max-w-7xl mx-auto px-8 mb-32">
             <div className="flex flex-col items-center mb-16">
               <h2 className="text-4xl md:text-5xl font-serif mb-4 text-glow text-center">Sacred Gallery</h2>
@@ -674,9 +684,9 @@ export default function App() {
             </div>
 
             <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
-              {liveEvents.filter(e => e.image_url).map((event, i) => (
+              {galleryItems.map((item, i) => (
                 <motion.div
-                  key={event.id}
+                  key={item.id}
                   initial={{ opacity: 0, scale: 0.9 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   transition={{ delay: i * 0.1, duration: 0.5 }}
@@ -686,15 +696,15 @@ export default function App() {
                   <div className="glass-panel p-2 rounded-2xl overflow-hidden transition-all duration-500 group-hover:bg-white/10">
                     <div className="specular-highlight rounded-2xl" />
                     <img 
-                      src={event.image_url} 
-                      alt={event.title}
+                      src={item.image_url} 
+                      alt={item.description}
                       className="w-full rounded-xl object-cover transition-transform duration-700 group-hover:scale-105"
                       referrerPolicy="no-referrer"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-pure-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl" />
                     
                     <div className="absolute bottom-6 left-6 right-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
-                      <p className="font-serif text-lg italic text-white/90">{event.title}</p>
+                      <p className="font-serif text-lg italic text-white/90">{item.description}</p>
                     </div>
                   </div>
                 </motion.div>
